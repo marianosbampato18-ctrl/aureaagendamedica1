@@ -204,7 +204,15 @@ function renderTurnos() {
     else if(t.estado==='completado') completados.push(t);
     else cancelados.push(t);
   });
-  proximos.sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
+  // Ordenar por fecha + hora (fecha primero, si igual fecha comparar hora)
+  function sortPorFechaHora(a, b) {
+    var fa = (a.fecha||'') + ' ' + (a.hora||'');
+    var fb = (b.fecha||'') + ' ' + (b.hora||'');
+    return fa.localeCompare(fb);
+  }
+  proximos.sort(sortPorFechaHora);
+  completados.sort(sortPorFechaHora);
+  cancelados.sort(sortPorFechaHora);
   document.getElementById('m-total').textContent=proximos.length+completados.length+cancelados.length;
   document.getElementById('m-prox').textContent=proximos.length;
   var html='<div class="section-label">Próximos turnos</div>';
