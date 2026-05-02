@@ -988,6 +988,46 @@ body.menu-open{ overflow:hidden; }
   /* En mobile el sidebar no existe; drawer + hamburguesa siguen igual */
   .aurea-sidebar{ display:none !important; }
 }
+
+/* ══════════════════════════════════════════════
+   CALENDARIO DESKTOP — expande más allá del
+   contenedor 480px para usar todo el espacio
+   ══════════════════════════════════════════════ */
+@media (min-width:768px){
+  .container.cal-visible{
+    max-width: none;
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+  .cal-container{
+    height: calc(100vh - 218px);
+  }
+  /* Toolbar */
+  .cal-toolbar{ padding:16px 22px; }
+  .cal-date-title{ font-size:17px; min-width:200px; }
+  .cal-nav-btn{ width:36px; height:36px; font-size:16px; }
+  .cal-view-btn{ padding:6px 18px; font-size:12px; }
+  .cal-today-btn{ padding:6px 16px; font-size:12px; }
+  /* Cabecera días */
+  .cal-header-weekday{ font-size:11px; }
+  .cal-header-num{ font-size:26px; }
+  .cal-header-num.today-num{ width:40px; height:40px; font-size:20px; }
+  /* Gutter horas */
+  .cal-gutter{ width:56px; }
+  .cal-header-gutter{ width:56px; }
+  .cal-hour-label{ font-size:11px; }
+  /* Vista mes */
+  .cal-mes-dh{ font-size:12px; padding:12px 4px; letter-spacing:.1em; }
+  .cal-mes-grid{ grid-auto-rows:minmax(110px,1fr); }
+  .cal-mes-cell{ padding:8px 7px; min-height:110px; }
+  .cal-mes-num{ font-size:15px; width:30px; height:30px; }
+  .cal-mes-num.hoy-num{ width:30px; height:30px; font-size:15px; }
+  .cal-mes-ev{ font-size:12px; padding:4px 8px; border-radius:7px; margin-bottom:3px; }
+  .cal-mes-ev-hora{ font-size:10px; }
+  .cal-mes-mas{ font-size:10px; }
+  .cal-mes-leyenda{ padding:12px 20px; gap:18px; }
+  .cal-mes-leyenda span{ font-size:12px; }
+}
 </style>
 </head>
 <body>

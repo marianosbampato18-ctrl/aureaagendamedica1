@@ -23,6 +23,8 @@ function showPanel(panel) {
     if (panEl) panEl.className = 'panel' + (p === panel ? ' active' : '');
     if (tabEl) tabEl.className = 'nav-tab'  + (p === panel ? ' active' : '');
   });
+  var cont = document.querySelector('.container');
+  if (cont) cont.classList.toggle('cal-visible', panel === 'cal');
   // Fix #13: limpiar timer del calendario cuando no está activo
   if (panel !== 'cal' && typeof calNowTimer !== 'undefined' && calNowTimer) {
     clearInterval(calNowTimer);
