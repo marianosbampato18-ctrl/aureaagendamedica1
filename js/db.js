@@ -32,6 +32,21 @@ function _addListener(ref, event, handler) {
 function iniciarListeners() {
   detenerListeners(); // siempre limpiar antes de registrar nuevos
 
+  // Barra de conexión — se actualiza aunque la DB esté vacía
+  db.ref('.info/connected').on('value', function(snap) {
+    if (snap.val() === true) {
+      // Dar 1.5s para que lleguen los datos iniciales; si no llegan (DB vacía) igual mostrar OK
+      setTimeout(function() {
+        var b = document.getElementById('sync-bar');
+        if (b && b.className.indexOf('loading') !== -1) {
+          setSyncBar('ok', '✦ Sincronizado');
+        }
+      }, 1500);
+    } else {
+      setSyncBar('error', '⚠ Sin conexión');
+    }
+  });
+
   // TURNOS — onChild* con query de fecha (Fix #7)
   var hace90 = new Date(); hace90.setDate(hace90.getDate()-90);
   var hace90str = hace90.toISOString().split('T')[0];

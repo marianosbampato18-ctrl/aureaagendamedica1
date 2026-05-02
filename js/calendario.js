@@ -7,7 +7,7 @@
 var CAL_HORA_INI  = 8;   // primera hora visible
 var CAL_HORA_FIN  = 21;  // última hora visible
 var CAL_PX_HORA   = 64;  // píxeles por hora
-var calView       = 'dia';
+var calView       = 'mes';
 var calBaseDate   = new Date();
 var calDragState  = null;
 var calResizeState= null;
