@@ -796,6 +796,198 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
 
 /* Bloqueo de scroll cuando el menú está abierto */
 body.menu-open{ overflow:hidden; }
+
+/* ══════════════════════════════════════════════
+   SIDEBAR DESKTOP — Fixed left navigation (≥768px)
+   Misma fuente de verdad (MENU_ITEMS) que el drawer mobile.
+   ══════════════════════════════════════════════ */
+.aurea-sidebar{
+  display:none; /* sólo visible ≥768px */
+  position:fixed;
+  top:0;left:0;bottom:0;
+  width:232px;
+  background:linear-gradient(180deg,#2E2419 0%,#1F1810 100%);
+  border-right:1px solid rgba(201,163,90,.15);
+  box-shadow:2px 0 24px rgba(0,0,0,.18);
+  z-index:90;
+  flex-direction:column;
+  font-family:var(--font-body);
+  overflow:hidden;
+}
+.aurea-sidebar::before{
+  content:"";
+  position:absolute;top:-70px;right:-70px;
+  width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(201,163,90,.14) 0%,transparent 70%);
+  pointer-events:none;
+}
+.aurea-sidebar::after{
+  content:"";
+  position:absolute;bottom:-50px;left:-30px;
+  width:140px;height:140px;border-radius:50%;
+  background:radial-gradient(circle,rgba(201,163,90,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+.aurea-sidebar-header{
+  position:relative;z-index:1;
+  padding:28px 20px 22px;
+  display:flex;flex-direction:column;align-items:center;
+  gap:10px;
+  border-bottom:1px solid rgba(201,163,90,.15);
+  flex-shrink:0;
+}
+.aurea-sidebar-monogram{
+  width:46px;height:auto;display:block;
+  filter:drop-shadow(0 4px 14px rgba(201,163,90,.35));
+}
+.aurea-sidebar-wordmark{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:20px;
+  letter-spacing:.34em;
+  background:linear-gradient(180deg,#F2D58F 0%,#C9A35A 55%,#8C6F2F 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  text-transform:uppercase;
+  text-align:center;
+  line-height:1;
+  margin-top:2px;
+}
+.aurea-sidebar-clinic{
+  font-family:var(--font-display);
+  font-weight:500;
+  font-size:9px;
+  letter-spacing:.5em;
+  color:var(--gold);
+  text-transform:uppercase;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;
+}
+.aurea-sidebar-clinic::before,
+.aurea-sidebar-clinic::after{
+  content:"";flex:0 0 18px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  opacity:.7;
+}
+
+.aurea-sidebar-nav{
+  position:relative;z-index:1;
+  flex:1;
+  list-style:none;
+  padding:14px 12px;
+  margin:0;
+  display:flex;flex-direction:column;
+  gap:2px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.aurea-sidebar-item{
+  position:relative;
+  display:flex;align-items:center;gap:14px;
+  width:100%;
+  min-height:46px;
+  padding:11px 14px 11px 13px;
+  border:none;
+  background:transparent;
+  color:rgba(255,255,255,.72);
+  font-family:var(--font-display);
+  font-size:12px;
+  font-weight:500;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  text-align:left;
+  cursor:pointer;
+  border-radius:10px;
+  border-left:3px solid transparent;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .2s ease, color .2s ease, border-left-color .2s ease;
+}
+.aurea-sidebar-item .aurea-sidebar-item-icon{
+  font-size:15px;
+  width:28px;height:28px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:8px;
+  background:rgba(201,163,90,.10);
+  border:1px solid rgba(201,163,90,.22);
+  flex-shrink:0;
+  transition:background .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease;
+}
+.aurea-sidebar-item:hover{
+  background:rgba(201,163,90,.08);
+  color:var(--gold-light);
+  border-left-color:rgba(201,163,90,.55);
+}
+.aurea-sidebar-item:hover .aurea-sidebar-item-icon{
+  background:rgba(201,163,90,.18);
+  border-color:rgba(201,163,90,.5);
+}
+.aurea-sidebar-item.active{
+  background:rgba(201,163,90,.18);
+  color:var(--gold-light);
+  border-left-color:var(--gold);
+}
+.aurea-sidebar-item.active .aurea-sidebar-item-icon{
+  background:linear-gradient(135deg,var(--gold-light),var(--gold));
+  border-color:var(--gold);
+  color:#1A130C;
+  box-shadow:0 4px 14px rgba(201,163,90,.32);
+}
+.aurea-sidebar-item-label{flex:1;line-height:1.2}
+
+.aurea-sidebar-footer{
+  position:relative;z-index:1;
+  border-top:1px solid rgba(201,163,90,.15);
+  padding:14px 18px 18px;
+  display:flex;flex-direction:column;gap:8px;
+  flex-shrink:0;
+}
+.aurea-sidebar-user{
+  font-size:11px;
+  color:rgba(255,255,255,.55);
+  letter-spacing:.04em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  min-height:16px;
+}
+.aurea-sidebar-logout{
+  background:transparent;
+  border:1px solid rgba(255,255,255,.18);
+  color:rgba(255,255,255,.7);
+  border-radius:10px;
+  padding:9px 12px;
+  font-size:10px;font-weight:600;
+  font-family:var(--font-display);
+  letter-spacing:.28em;
+  text-transform:uppercase;
+  cursor:pointer;
+  min-height:38px;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .2s ease, color .2s ease, border-color .2s ease;
+}
+.aurea-sidebar-logout:hover{
+  background:rgba(201,163,90,.12);
+  border-color:var(--gold);
+  color:var(--gold-light);
+}
+
+/* ── Aplicación del sidebar / responsive ───────────────── */
+@media (min-width:768px){
+  .aurea-sidebar{ display:flex; }
+  /* El contenido se corre a la derecha para dejar lugar al sidebar */
+  #app-screen{ padding-left:232px; }
+  /* Tabs antiguos — siempre ocultos: el sidebar reemplaza la navegación */
+  .nav-tabs{ display:none !important; }
+  /* Branding del hero queda redundante con el sidebar — simplificamos */
+  .hero-brand .brand-monogram-sm{ display:none; }
+  .hero-brand-text .hero-eyebrow{ display:none; }
+  .hero-brand-text .hero-title{ font-size:18px; letter-spacing:.14em; }
+  .hero-top .btn-logout{ display:none; }
+  /* El hero queda un poco más holgado abajo cuando no hay tabs */
+  .hero{ padding:36px 28px 22px; border-radius:0 0 28px 28px; }
+}
+@media (max-width:767px){
+  /* En mobile el sidebar no existe; drawer + hamburguesa siguen igual */
+  .aurea-sidebar{ display:none !important; }
+}
 </style>
 </head>
 <body>
@@ -828,6 +1020,24 @@ body.menu-open{ overflow:hidden; }
 
 <!-- APP -->
 <div id="app-screen">
+  <!-- ═══════════════════════════════════════════
+       SIDEBAR DESKTOP (≥768px) — fixed left
+       Render desde MENU_ITEMS (js/menu.js).
+       Mobile usa el drawer + hamburguesa de siempre.
+       ═══════════════════════════════════════════ -->
+  <aside class="aurea-sidebar" id="aurea-sidebar" aria-label="Navegación principal">
+    <div class="aurea-sidebar-header">
+      <img src="aurea-monogram.png" alt="" class="aurea-sidebar-monogram"/>
+      <div class="aurea-sidebar-wordmark">Áurea</div>
+      <div class="aurea-sidebar-clinic">Clinic</div>
+    </div>
+    <ul class="aurea-sidebar-nav" id="aurea-sidebar-nav" role="menu"></ul>
+    <div class="aurea-sidebar-footer">
+      <div class="aurea-sidebar-user" id="aurea-sidebar-user"></div>
+      <button class="aurea-sidebar-logout" type="button" onclick="logout()">Salir</button>
+    </div>
+  </aside>
+
   <div class="hero">
     <div class="hero-orb1"></div><div class="hero-orb2"></div>
     <svg viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:.15">
@@ -874,7 +1084,10 @@ body.menu-open{ overflow:hidden; }
       <div class="metric-sep"></div>
       <div class="metric"><div class="metric-value" id="m-pac">–</div><div class="metric-label">Pacientes</div></div>
     </div>
-    <div class="nav-tabs">
+    <!-- Tabs antiguos — quedan en el DOM sólo para que showPanel pueda
+         seguir tocando sus className sin errores. Visualmente están
+         siempre ocultos (sidebar en desktop, drawer en mobile). -->
+    <div class="nav-tabs" aria-hidden="true">
       <div class="nav-tab active" id="tab-agenda" onclick="showPanel('agenda')">📅 Lista</div>
       <div class="nav-tab" id="tab-cal" onclick="showPanel('cal')">🗓 Cal</div>
       <div class="nav-tab" id="tab-fichas" onclick="showPanel('fichas')" title="Historias Clínicas">👤 H.C.</div>
