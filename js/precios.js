@@ -14,13 +14,16 @@ function limpiarFormTrat() {
   ['tr-nombre','tr-precio','tr-duracion'].forEach(function(id){ document.getElementById(id).value=''; });
   document.getElementById('tr-err').className = 'err';
   document.getElementById('form-trat-title').textContent = 'Nuevo tratamiento';
-  setTratCat('Facial');
+  setTratCat('Rellenos');
   tratEditKey = null;
 }
 
 function setTratCat(c) {
+  // Compatibilidad con valores legacy (guardados con espacio o categorías eliminadas)
+  var mapLegacy = { 'Skin Quality': 'SkinQuality', 'Facial': 'Rellenos', 'Inyectables': 'Rellenos', 'Corporal': 'Otros' };
+  if (mapLegacy[c]) c = mapLegacy[c];
   formTratCat = c;
-  ['Rellenos','Hilos','Toxina','Enzimas','Skin Quality','Bioestimuladores','Facial','Inyectables','Corporal','Otros'].forEach(function(x){
+  ['Rellenos','Hilos','Toxina','Enzimas','SkinQuality','Bioestimuladores','Otros'].forEach(function(x){
     var el = document.getElementById('trc-'+x);
     if (el) el.className = 'toggle-btn' + (x===c?' sel':'');
   });
@@ -94,7 +97,7 @@ function renderPrecios() {
     { cat: 'Hilos',            icon: '≠', titulo: 'Hilos',                         col: 0 },
     { cat: 'Toxina',           icon: '⬡', titulo: 'Toxina Botulínica',             col: 0 },
     { cat: 'Enzimas',          icon: '✦', titulo: 'Enzimas y Correctivos',         col: 0 },
-    { cat: 'Skin Quality',     icon: '○', titulo: 'Skin Quality / Bioestimulación',col: 1 },
+    { cat: 'SkinQuality',      icon: '○', titulo: 'Skin Quality / Bioestimulación',col: 1 },
     { cat: 'Bioestimuladores', icon: '◈', titulo: 'Bioestimuladores',              col: 1 },
     { cat: 'Facial',           icon: '✧', titulo: 'Facial',                        col: 1 },
     { cat: 'Inyectables',      icon: '◇', titulo: 'Inyectables',                   col: 0 },
@@ -103,10 +106,13 @@ function renderPrecios() {
   ];
 
   // Agrupar por categoría
+  // Mapeo de categorías legacy para compatibilidad con datos viejos
+  var catLegacyMap = { 'Skin Quality': 'SkinQuality', 'Facial': 'Rellenos', 'Inyectables': 'Rellenos', 'Corporal': 'Otros' };
   var grupos = {};
   keys.forEach(function(k) {
     var t = tratamientosData[k];
     var cat = t.categoria || 'Otros';
+    if (catLegacyMap[cat]) cat = catLegacyMap[cat];
     if (!grupos[cat]) grupos[cat] = [];
     grupos[cat].push({ key: k, t: t });
   });

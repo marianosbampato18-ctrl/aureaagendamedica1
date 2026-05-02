@@ -91,7 +91,6 @@ function cerrarModalCobro() {
   if (!turnoCobroKey) return;
   var t = turnosData[turnoCobroKey];
   if (!confirm('¿Marcar como realizado sin registrar cobro?')) return;
-  db.ref('modal-cobro');
   document.getElementById('modal-cobro').className = 'modal-overlay';
   db.ref('turnos/'+turnoCobroKey).update({ estado: 'completado' });
   if (t && t.pacienteKey) {

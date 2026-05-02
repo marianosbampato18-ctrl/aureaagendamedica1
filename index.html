@@ -7,9 +7,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Dra. Bruna Nara"/>
 <title>Dra. Bruna Nara · Agenda</title>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
@@ -1599,7 +1596,7 @@ body.menu-open{ overflow:hidden; }
             <button type="button" class="toggle-btn"     id="trc-Hilos"         onclick="setTratCat('Hilos')"         style="font-size:12px;padding:8px 10px;flex:none">Hilos</button>
             <button type="button" class="toggle-btn"     id="trc-Toxina"        onclick="setTratCat('Toxina')"        style="font-size:12px;padding:8px 10px;flex:none">Toxina</button>
             <button type="button" class="toggle-btn"     id="trc-Enzimas"       onclick="setTratCat('Enzimas')"       style="font-size:12px;padding:8px 10px;flex:none">Enzimas</button>
-            <button type="button" class="toggle-btn"     id="trc-Skin Quality"  onclick="setTratCat('Skin Quality')"  style="font-size:12px;padding:8px 10px;flex:none">Skin Quality</button>
+            <button type="button" class="toggle-btn"     id="trc-SkinQuality"   onclick="setTratCat('SkinQuality')"   style="font-size:12px;padding:8px 10px;flex:none">Skin Quality</button>
             <button type="button" class="toggle-btn"     id="trc-Bioestimuladores" onclick="setTratCat('Bioestimuladores')" style="font-size:12px;padding:8px 10px;flex:none">Bioestimuladores</button>
             <button type="button" class="toggle-btn"     id="trc-Otros"         onclick="setTratCat('Otros')"         style="font-size:12px;padding:8px 10px;flex:none">Otros</button>
           </div>
@@ -1781,10 +1778,10 @@ body.menu-open{ overflow:hidden; }
 <!-- 2. App modules — orden de dependencias garantizado -->
 <script src="js/config.js"></script>      <!-- Firebase config + dbMock + initFirebase -->
 <script src="js/helpers.js"></script>     <!-- Soft delete, validaciones, error handling -->
+<script src="js/ui.js"></script>          <!-- showPanel, setSyncBar -->
 <script src="js/db.js"></script>          <!-- Firebase listeners + seed centralizado -->
 <script src="js/state.js"></script>       <!-- Variables globales (usa tratamientosSeed de db.js) -->
 <script src="js/auth.js"></script>        <!-- Login, sesión, auto-login -->
-<script src="js/ui.js"></script>          <!-- showPanel, setSyncBar -->
 <script src="js/caja.js"></script>        <!-- Cobros y caja diaria -->
 <script src="js/turnos.js"></script>      <!-- CRUD de turnos -->
 <script src="js/pacientes.js"></script>   <!-- Fichas y historial -->
@@ -1792,7 +1789,7 @@ body.menu-open{ overflow:hidden; }
 <script src="js/modales.js"></script>     <!-- Modales de edición -->
 <script src="js/calendario.js"></script>  <!-- Calendario interactivo -->
 <script src="js/menu.js"></script>        <!-- Menú hamburguesa responsive -->
-<script src="js/archivos.js"></script>    <!-- Módulo archivos clínicos (Supabase) -->
+<script src="js/archivos.js"></script>    <!-- Módulo archivos clínicos (Firebase DB + Canvas) -->
 
 </body>
 </html>

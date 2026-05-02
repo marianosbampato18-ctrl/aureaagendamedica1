@@ -138,12 +138,12 @@ function tratamientosSeed() {
     { nombre: 'Enzimas x3',      categoria: 'Enzimas', precio: 270000, duracion: 45 },
     { nombre: 'Enzimas x4',      categoria: 'Enzimas', precio: 330000, duracion: 60 },
     { nombre: 'Hialuronidasa',   categoria: 'Enzimas', precio: 110000, duracion: 30 },
-    { nombre: 'Long Lasting',          categoria: 'Skin Quality', precio: 440000, duracion: 45 },
-    { nombre: 'NCTF (3ml)',            categoria: 'Skin Quality', precio: 360000, duracion: 45 },
-    { nombre: 'HarmonyCa (Promo)',     categoria: 'Skin Quality', precio: 340000, duracion: 45 },
-    { nombre: 'Plasma',                categoria: 'Skin Quality', precio: 120000, duracion: 60 },
-    { nombre: 'Profhilo',              categoria: 'Skin Quality', precio: 440000, duracion: 45 },
-    { nombre: 'Cellbooster',           categoria: 'Skin Quality', precio: 200000, duracion: 45 },
+    { nombre: 'Long Lasting',          categoria: 'SkinQuality', precio: 440000, duracion: 45 },
+    { nombre: 'NCTF (3ml)',            categoria: 'SkinQuality', precio: 360000, duracion: 45 },
+    { nombre: 'HarmonyCa (Promo)',     categoria: 'SkinQuality', precio: 340000, duracion: 45 },
+    { nombre: 'Plasma',                categoria: 'SkinQuality', precio: 120000, duracion: 60 },
+    { nombre: 'Profhilo',              categoria: 'SkinQuality', precio: 440000, duracion: 45 },
+    { nombre: 'Cellbooster',           categoria: 'SkinQuality', precio: 200000, duracion: 45 },
     { nombre: 'Radiesse',              categoria: 'Bioestimuladores', precio: 370000, duracion: 60 },
     { nombre: 'Sculptra',              categoria: 'Bioestimuladores', precio: 440000, duracion: 60 },
     { nombre: 'Ellansé',               categoria: 'Bioestimuladores', precio: 400000, duracion: 60 },
@@ -161,7 +161,3 @@ function cargarTratamientosPorDefecto() {
   Promise.all(promesas).then(function(){ alert('Cargados ' + promesas.length + ' tratamientos.'); });
 }
 
-function setSyncBar(cls, txt) {
-  var b = document.getElementById('sync-bar');
-  if (b) { b.className = 'sync-bar ' + cls; b.textContent = txt; }
-}

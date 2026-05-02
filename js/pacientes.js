@@ -65,11 +65,11 @@ function filtrarFichas(query) {
   lista.innerHTML = keys.map(function(key) {
     var p = pacientesData[key];
     var hc = p.historial ? Object.keys(p.historial).length : 0;
-    var idBadge = p.pacienteId ? '<span style="font-size:10px;font-weight:700;color:var(--gold-dark);background:#FDF8EE;border:1px solid var(--gold);border-radius:20px;padding:2px 8px;margin-left:6px">#'+p.pacienteId+'</span>' : '';
+    var idBadge = p.pacienteId ? '<span style="font-size:10px;font-weight:700;color:var(--gold-dark);background:#FDF8EE;border:1px solid var(--gold);border-radius:20px;padding:2px 8px;margin-left:6px">#'+sanitize(p.pacienteId)+'</span>' : '';
     return '<div class="pac-card" id="pac-card-'+key+'" onclick="abrirFichaKey(\''+key+'\')">' +
       '<div class="pac-card-top"><div>' +
-        '<div class="pac-card-name">'+p.nombre+idBadge+'</div>' +
-        '<div class="pac-card-sub">'+(p.telefono?'📞 '+p.telefono:'')+(p.dni?' · 🪪 '+p.dni:'')+(p.email?' · ✉ '+p.email:'')+'</div>' +
+        '<div class="pac-card-name">'+sanitize(p.nombre)+idBadge+'</div>' +
+        '<div class="pac-card-sub">'+(p.telefono?'📞 '+sanitize(p.telefono):'')+(p.dni?' · 🪪 '+sanitize(p.dni):'')+(p.email?' · ✉ '+sanitize(p.email):'')+'</div>' +
       '</div><div style="display:flex;align-items:center">' +
         '<span class="pac-card-count">'+hc+' visita'+(hc!==1?'s':'')+'</span>' +
         '<span class="chevron">›</span>' +
@@ -160,9 +160,9 @@ function renderHistorial() {
     var pf=parseFecha(h.fecha);
     return '<div class="historial-item">' +
       '<div class="hist-fecha">'+pf.d+' '+MESES[pf.m]+' '+pf.y+(h.auto?'<span class="auto-badge">automático</span>':'')+'</div>' +
-      '<div class="hist-trat">'+h.tratamiento+'</div>' +
-      (h.productos?'<div class="hist-prod">🧴 '+h.productos+'</div>':'') +
-      (h.notas?'<div class="hist-nota">'+h.notas+'</div>':'') +
+      '<div class="hist-trat">'+sanitize(h.tratamiento)+'</div>' +
+      (h.productos?'<div class="hist-prod">🧴 '+sanitize(h.productos)+'</div>':'') +
+      (h.notas?'<div class="hist-nota">'+sanitize(h.notas)+'</div>':'') +
       '<div class="hist-actions"><button class="act-btn btn-del" onclick="eliminarHistorial(\''+k+'\')">Eliminar</button></div>' +
     '</div>';
   }).join('');
@@ -326,12 +326,12 @@ function renderTratPac() {
     return '<div class="trat-pac-item">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">' +
         '<div style="flex:1;min-width:0">' +
-          '<div class="trat-pac-nombre">'+t.nombre+'</div>' +
+          '<div class="trat-pac-nombre">'+sanitize(t.nombre)+'</div>' +
           (fechaTxt || precioTxt ? '<div class="trat-pac-meta">' +
-            (fechaTxt ? '📅 '+fechaTxt+'&nbsp;&nbsp;' : '') +
-            (precioTxt ? '<span class="trat-pac-precio">'+precioTxt+'</span>' : '') +
+            (fechaTxt ? '📅 '+sanitize(fechaTxt)+'&nbsp;&nbsp;' : '') +
+            (precioTxt ? '<span class="trat-pac-precio">'+sanitize(precioTxt)+'</span>' : '') +
           '</div>' : '') +
-          (t.notas ? '<div class="trat-pac-notas">'+t.notas+'</div>' : '') +
+          (t.notas ? '<div class="trat-pac-notas">'+sanitize(t.notas)+'</div>' : '') +
         '</div>' +
       '</div>' +
       '<div class="trat-pac-actions">' +
