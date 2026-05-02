@@ -4,46 +4,48 @@
 // ═══════════════════════════════════════════
 
 // ── Configuración Supabase ────────────────────────────────────────
-// PASO OBLIGATORIO: reemplazá estos dos valores con los de tu proyecto.
-// Los encontrás en Supabase → Settings → API.
+// Reemplazá estos dos valores con los de tu proyecto.
+// Supabase → Settings → API
 var SUPABASE_URL      = 'https://TU_PROYECTO.supabase.co';
 var SUPABASE_ANON_KEY = 'TU_ANON_KEY_PUBLICA';
 var SUPABASE_BUCKET   = 'medical-files';
 
-var _sbClient = null; // se inicializa en initArchivos()
+var _sbClient = null;
 
 // ── Estado del módulo ─────────────────────────────────────────────
-var archivosData       = []; // array con todos los archivos del paciente actual
-var filtroArchivos     = 'todos'; // 'todos' | 'antes' | 'despues' | 'tratamiento'
-var archArchivoActual  = null;   // objeto del archivo abierto en modal
+// FIX #3: era `var archPendingFile = null` (un solo File).
+// Ahora es un array para soportar múltiples archivos.
+var archPendingFiles   = [];
+var archivosData       = [];
+var filtroArchivos     = 'todos';
+var archArchivoActual  = null;
 var formArchivoVisible = false;
-var archPendingFile    = null;   // File object pendiente de subir
-
-// ── Observer lazy loading ─────────────────────────────────────────
-var _archLazyObserver = null;
+var _archLazyObserver  = null;
 
 // ═══════════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════════
 function initArchivos() {
   if (typeof supabase === 'undefined' || typeof supabase.createClient !== 'function') {
-    console.warn('[Archivos] SDK de Supabase no disponible. Agregá el CDN antes de archivos.js.');
+    console.warn('[Archivos] SDK de Supabase no disponible. Verificá que el CDN esté antes de archivos.js.');
     return;
   }
   if (SUPABASE_URL === 'https://TU_PROYECTO.supabase.co') {
-    console.warn('[Archivos] Configurá SUPABASE_URL y SUPABASE_ANON_KEY en js/archivos.js');
+    console.warn('[Archivos] ⚠ Configurá SUPABASE_URL y SUPABASE_ANON_KEY en js/archivos.js');
     return;
   }
 
   _sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  console.log('[Archivos] Cliente Supabase inicializado →', SUPABASE_URL.split('.')[0]);
+
   _initDragDrop();
   _patchearFunciones();
 }
 
-// Parchea abrirFichaKey y cerrarFicha de pacientes.js sin tocar ese archivo.
+// ── Parchea abrirFichaKey / cerrarFicha sin tocar pacientes.js ────
 function _patchearFunciones() {
-  var _origAbrir  = typeof window.abrirFichaKey === 'function' ? window.abrirFichaKey : null;
-  var _origCerrar = typeof window.cerrarFicha   === 'function' ? window.cerrarFicha   : null;
+  var _origAbrir  = typeof window.abrirFichaKey === 'function' ? window.abrirFichaKey  : null;
+  var _origCerrar = typeof window.cerrarFicha   === 'function' ? window.cerrarFicha    : null;
 
   if (_origAbrir) {
     window.abrirFichaKey = function(key) {
@@ -80,6 +82,7 @@ function cargarArchivos(patientId) {
         return;
       }
       archivosData = result.data || [];
+      console.log('[Archivos] Archivos cargados:', archivosData.length);
       renderGaleria();
     });
 }
@@ -109,7 +112,6 @@ function renderGaleria() {
     var mediaTag = isVideo
       ? '<video data-src="' + _esc(f.file_url) + '" muted playsinline preload="none"></video>'
       : '<img data-src="' + _esc(f.file_url) + '" alt="' + _esc(catLabel) + '"/>';
-
     return '<div class="arch-thumb" onclick="abrirModalArchivoView(\'' + f.id + '\')">' +
       mediaTag +
       '<div class="arch-thumb-badge">' + catLabel + '</div>' +
@@ -129,7 +131,7 @@ function setFiltroArchivos(btn, cat) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// FORMULARIO UPLOAD — toggle y helpers
+// FORMULARIO UPLOAD — toggle
 // ═══════════════════════════════════════════════════════════════════
 function toggleFormArchivo() {
   formArchivoVisible = !formArchivoVisible;
@@ -137,90 +139,186 @@ function toggleFormArchivo() {
   var btn  = document.getElementById('btn-subir-archivo');
   if (form) form.className = 'form-card' + (formArchivoVisible ? ' visible' : '');
   if (btn) {
-    btn.textContent  = formArchivoVisible ? '✕ Cerrar' : '+ Subir';
-    btn.className    = 'btn-primary' + (formArchivoVisible ? ' active' : '');
+    btn.textContent = formArchivoVisible ? '✕ Cerrar' : '+ Subir';
+    btn.className   = 'btn-primary' + (formArchivoVisible ? ' active' : '');
   }
   if (!formArchivoVisible) _resetFormArchivo();
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// SELECCIÓN DE ARCHIVOS
+// FIX #2: antes solo procesaba input.files[0]. Ahora itera FileList
+// completo y valida cada archivo individualmente.
+// ═══════════════════════════════════════════════════════════════════
 function onArchivoSeleccionado(input) {
-  var file = input.files && input.files[0];
-  if (!file) return;
+  var fileList = input.files;
+  if (!fileList || !fileList.length) return;
 
-  var isImage = file.type.startsWith('image/');
-  var isVideo = file.type.startsWith('video/');
+  archPendingFiles = [];
+  var errores = [];
 
-  if (!isImage && !isVideo) {
-    _showArchErr('Solo se admiten imágenes (JPG, PNG, HEIC) y videos (MP4, MOV).');
+  for (var i = 0; i < fileList.length; i++) {
+    var file    = fileList[i];
+    var isImage = file.type.startsWith('image/');
+    var isVideo = file.type.startsWith('video/');
+
+    if (!isImage && !isVideo) {
+      errores.push('"' + file.name + '" no es imagen ni video.');
+      continue;
+    }
+    var maxBytes = isImage ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      errores.push('"' + file.name + '" supera el límite (' + (isImage ? '10 MB' : '50 MB') + ').');
+      continue;
+    }
+    archPendingFiles.push(file);
+  }
+
+  // Mostrar errores de validación si los hay
+  if (errores.length) {
+    _showArchErr(errores.join(' · '));
+  } else {
+    _showArchErr(null);
+  }
+
+  // Sin archivos válidos → deshabilitar botón
+  if (!archPendingFiles.length) {
+    document.getElementById('btn-confirmar-upload').disabled = true;
     return;
   }
 
-  var maxSize = isImage ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
-  if (file.size > maxSize) {
-    _showArchErr('El archivo supera el límite permitido (' + (isImage ? '10 MB para imágenes' : '50 MB para videos') + ').');
-    return;
+  console.log('[Archivos] Archivos válidos seleccionados:', archPendingFiles.length);
+
+  // Actualizar texto de la zona de drop
+  var dropText = document.querySelector('#arch-drop-zone .arch-drop-text');
+  if (dropText) {
+    dropText.textContent = archPendingFiles.length === 1
+      ? archPendingFiles[0].name
+      : archPendingFiles.length + ' archivos seleccionados';
   }
 
-  archPendingFile = file;
-  _showArchErr(null);
+  // Render preview
+  _renderPreviewLista(archPendingFiles);
 
-  // Preview
+  // Habilitar botón de subir
+  var btnUp = document.getElementById('btn-confirmar-upload');
+  if (btnUp) {
+    btnUp.disabled    = false;
+    btnUp.textContent = archPendingFiles.length === 1
+      ? 'Subir archivo'
+      : 'Subir ' + archPendingFiles.length + ' archivos';
+  }
+}
+
+// Muestra preview: imagen simple si es 1 imagen, lista de nombres si son varios.
+function _renderPreviewLista(files) {
   var wrap = document.getElementById('arch-preview-wrap');
   var img  = document.getElementById('arch-preview-img');
   var vid  = document.getElementById('arch-preview-vid');
-  var url  = URL.createObjectURL(file);
 
+  if (!wrap) return;
+
+  // Limpiar medios previos
   if (img) { img.src = ''; img.style.display = 'none'; }
   if (vid) { vid.pause(); vid.src = ''; vid.style.display = 'none'; }
-  if (wrap) wrap.style.display = 'block';
 
-  if (isImage && img) { img.src = url; img.style.display = 'block'; }
-  if (isVideo && vid) { vid.src = url; vid.style.display = 'block'; }
+  // Eliminar lista previa si existe
+  var prevList = wrap.querySelector('.arch-file-list');
+  if (prevList) prevList.remove();
 
-  var dropText = document.querySelector('#arch-drop-zone .arch-drop-text');
-  if (dropText) dropText.textContent = file.name;
+  // Si es una sola imagen → preview clásico
+  if (files.length === 1 && files[0].type.startsWith('image/') && img) {
+    img.src = URL.createObjectURL(files[0]);
+    img.style.display = 'block';
+    wrap.style.display = 'block';
+    return;
+  }
 
-  var btnUp = document.getElementById('btn-confirmar-upload');
-  if (btnUp) btnUp.disabled = false;
+  // Múltiples archivos → lista de nombres + tamaños
+  var listDiv = document.createElement('div');
+  listDiv.className = 'arch-file-list';
+  listDiv.style.cssText = 'margin-top:12px;max-height:150px;overflow-y:auto;border-radius:10px;border:1px solid var(--border);padding:0 10px';
+  listDiv.innerHTML = files.map(function(f) {
+    var icon = f.type.startsWith('video/') ? '🎬' : '🖼';
+    var mb   = (f.size / 1024 / 1024).toFixed(1) + ' MB';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--ivory);font-size:12px;color:var(--brown)">' +
+      '<span style="flex-shrink:0">' + icon + '</span>' +
+      '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _esc(f.name) + '</span>' +
+      '<span style="color:var(--brown-soft);flex-shrink:0;margin-left:8px">' + mb + '</span>' +
+    '</div>';
+  }).join('');
+  // Quitar borde en el último ítem
+  var items = listDiv.querySelectorAll('div');
+  if (items.length) items[items.length - 1].style.borderBottom = 'none';
+
+  wrap.appendChild(listDiv);
+  wrap.style.display = 'block';
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// UPLOAD — sube el archivo a Supabase Storage y registra en tabla
+// UPLOAD — async/await, loop por cada archivo
+// FIX #4: antes era una cadena .then() para un solo archivo.
+// Ahora es async/await que recorre todos los archivos pendientes.
+// Si uno falla, los demás siguen subiendo.
 // ═══════════════════════════════════════════════════════════════════
-function confirmarUpload() {
-  if (!archPendingFile || !fichaActualKey || !_sbClient) return;
+async function confirmarUpload() {
+  if (!archPendingFiles.length || !fichaActualKey || !_sbClient) {
+    console.warn('[Archivos] No se puede subir: archivos=' + archPendingFiles.length +
+      ' paciente=' + fichaActualKey + ' cliente=' + !!_sbClient);
+    return;
+  }
 
-  var file    = archPendingFile;
-  var cat     = (document.getElementById('arch-categoria') || {}).value || 'tratamiento';
-  var notas   = ((document.getElementById('arch-notas') || {}).value || '').trim();
-  var isImage = file.type.startsWith('image/');
+  var cat   = (document.getElementById('arch-categoria') || {}).value || 'tratamiento';
+  var notas = ((document.getElementById('arch-notas') || {}).value || '').trim();
 
-  var ext  = (file.name.split('.').pop() || 'bin').toLowerCase();
-  var path = fichaActualKey + '/' + Date.now() + '_' + Math.random().toString(36).slice(2) + '.' + ext;
-
-  // UI: iniciar barra de progreso
   var progWrap = document.getElementById('arch-progress-wrap');
   var progBar  = document.getElementById('arch-progress-bar');
   var progTxt  = document.getElementById('arch-progress-txt');
   var btn      = document.getElementById('btn-confirmar-upload');
 
   if (progWrap) progWrap.style.display = 'block';
-  if (btn) { btn.disabled = true; btn.textContent = 'Subiendo…'; }
+  if (progBar)  progBar.style.width = '0';
+  if (btn)      { btn.disabled = true; btn.textContent = 'Subiendo…'; }
 
-  // Barra animada (Supabase JS v2 no expone onUploadProgress en la API pública)
-  var progVal = 0;
-  var progTimer = setInterval(function() {
-    progVal = Math.min(progVal + Math.random() * 10, 85);
-    if (progBar) progBar.style.width = progVal + '%';
-  }, 250);
+  var total   = archPendingFiles.length;
+  var subidos = 0;
+  var errores = [];
 
-  _sbClient.storage
-    .from(SUPABASE_BUCKET)
-    .upload(path, file, { contentType: file.type, upsert: false })
-    .then(function(uploadResult) {
-      if (uploadResult.error) throw uploadResult.error;
-      var publicUrl = _sbClient.storage.from(SUPABASE_BUCKET).getPublicUrl(path).data.publicUrl;
-      return _sbClient.from('files').insert([{
+  console.log('[Archivos] Iniciando upload de', total, 'archivo(s). Paciente:', fichaActualKey, 'Bucket:', SUPABASE_BUCKET);
+
+  for (var i = 0; i < total; i++) {
+    var file    = archPendingFiles[i];
+    var isImage = file.type.startsWith('image/');
+    var ext     = (file.name.split('.').pop() || 'bin').toLowerCase();
+    // Nombre único para evitar colisiones
+    var path    = fichaActualKey + '/' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+
+    if (progTxt) progTxt.textContent = 'Subiendo ' + (i + 1) + ' de ' + total + '…';
+    if (progBar) progBar.style.width = Math.round((i / total) * 85) + '%';
+
+    console.log('[Archivos] (' + (i+1) + '/' + total + ') Subiendo:', file.name, '→', path, '| Tipo:', file.type, '| Tamaño:', (file.size/1024).toFixed(0) + ' KB');
+
+    try {
+      // ── Paso 1: subir al bucket ───────────────────────────────
+      var uploadResult = await _sbClient.storage
+        .from(SUPABASE_BUCKET)
+        .upload(path, file, { contentType: file.type, upsert: false });
+
+      if (uploadResult.error) {
+        console.error('[Archivos] ✗ Error storage en "' + file.name + '":', uploadResult.error);
+        errores.push('"' + file.name + '": ' + (uploadResult.error.message || 'error de storage'));
+        continue; // seguir con el siguiente archivo
+      }
+
+      console.log('[Archivos] ✓ Storage OK:', file.name);
+
+      // ── Paso 2: obtener URL pública ───────────────────────────
+      var publicUrlResult = _sbClient.storage.from(SUPABASE_BUCKET).getPublicUrl(path);
+      var publicUrl = publicUrlResult.data.publicUrl;
+      console.log('[Archivos] URL pública generada:', publicUrl);
+
+      // ── Paso 3: registrar en tabla files ──────────────────────
+      var insertResult = await _sbClient.from('files').insert([{
         patient_id: fichaActualKey,
         file_url:   publicUrl,
         file_type:  isImage ? 'image' : 'video',
@@ -228,24 +326,49 @@ function confirmarUpload() {
         notas:      notas,
         eliminado:  false
       }]);
-    })
-    .then(function(insertResult) {
-      clearInterval(progTimer);
-      if (insertResult && insertResult.error) throw insertResult.error;
-      if (progBar) progBar.style.width = '100%';
-      if (progTxt) progTxt.textContent = '✓ Subido correctamente';
-      setTimeout(function() {
-        toggleFormArchivo();
-        cargarArchivos(fichaActualKey);
-      }, 700);
-    })
-    .catch(function(err) {
-      clearInterval(progTimer);
-      console.error('[Archivos] Error al subir:', err);
-      _showArchErr('Error al subir el archivo: ' + (err.message || 'intentá nuevamente.'));
-      if (progWrap) progWrap.style.display = 'none';
-      if (btn) { btn.disabled = false; btn.textContent = 'Subir archivo'; }
-    });
+
+      if (insertResult.error) {
+        console.error('[Archivos] ✗ Error DB en "' + file.name + '":', insertResult.error);
+        errores.push('"' + file.name + '": ' + (insertResult.error.message || 'error de base de datos'));
+        continue;
+      }
+
+      console.log('[Archivos] ✓ DB OK:', file.name);
+      subidos++;
+
+    } catch (err) {
+      console.error('[Archivos] ✗ Excepción en "' + file.name + '":', err);
+      errores.push('"' + file.name + '": ' + (err.message || 'error desconocido'));
+    }
+  }
+
+  // ── Resultado final ───────────────────────────────────────────
+  if (progBar) progBar.style.width = '100%';
+  console.log('[Archivos] Upload finalizado. Subidos:', subidos, '| Errores:', errores.length);
+
+  if (errores.length === 0) {
+    // Todo OK
+    if (progTxt) progTxt.textContent = '✓ ' + subidos + ' archivo' + (subidos !== 1 ? 's' : '') + ' subido' + (subidos !== 1 ? 's' : '') + ' correctamente';
+    setTimeout(function() {
+      toggleFormArchivo();
+      cargarArchivos(fichaActualKey);
+    }, 800);
+
+  } else if (subidos > 0) {
+    // Algunos subieron, algunos fallaron
+    if (progTxt) progTxt.textContent = '⚠ ' + subidos + ' OK · ' + errores.length + ' con error';
+    _showArchErr('Errores: ' + errores.join(' · '));
+    cargarArchivos(fichaActualKey); // mostrar los que sí subieron
+    if (progWrap) progWrap.style.display = 'none';
+    if (btn) { btn.disabled = false; btn.textContent = 'Reintentar'; }
+
+  } else {
+    // Todo falló
+    if (progTxt) progTxt.textContent = '✗ No se pudo subir ningún archivo';
+    _showArchErr('Error: ' + errores.join(' · '));
+    if (progWrap) progWrap.style.display = 'none';
+    if (btn) { btn.disabled = false; btn.textContent = 'Reintentar'; }
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -260,29 +383,23 @@ function abrirModalArchivoView(id) {
   if (!overlay) return;
 
   var catLabels = { antes: 'Antes', despues: 'Después', tratamiento: 'Tratamiento' };
-  var catLabel = catLabels[f.category] || f.category;
-  var fechaStr = f.created_at
+  document.getElementById('mav-categoria').textContent = catLabels[f.category] || f.category;
+  document.getElementById('mav-fecha').textContent = f.created_at
     ? new Date(f.created_at).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })
     : '';
-
-  document.getElementById('mav-categoria').textContent = catLabel;
-  document.getElementById('mav-fecha').textContent = fechaStr;
 
   var img = document.getElementById('mav-img');
   var vid = document.getElementById('mav-vid');
   img.style.display = 'none'; img.src = '';
   vid.style.display = 'none'; vid.pause(); vid.src = '';
 
-  if (f.file_type === 'video') {
-    vid.src = f.file_url; vid.style.display = 'block';
-  } else {
-    img.src = f.file_url; img.style.display = 'block';
-  }
+  if (f.file_type === 'video') { vid.src = f.file_url; vid.style.display = 'block'; }
+  else                         { img.src = f.file_url; img.style.display = 'block'; }
 
   var notasEl = document.getElementById('mav-notas');
   if (notasEl) {
-    if (f.notas) { notasEl.textContent = f.notas; notasEl.className = 'modal-arch-notas visible'; }
-    else { notasEl.textContent = ''; notasEl.className = 'modal-arch-notas'; }
+    notasEl.textContent = f.notas || '';
+    notasEl.className   = 'modal-arch-notas' + (f.notas ? ' visible' : '');
   }
 
   overlay.style.display = 'flex';
@@ -290,7 +407,6 @@ function abrirModalArchivoView(id) {
 }
 
 function cerrarModalArchivoView(e) {
-  // Si el clic fue en el overlay (fondo), cerrar; si fue dentro de la card, no.
   if (e && e.target !== document.getElementById('modal-arch-view')) return;
   _cerrarModalArch();
 }
@@ -305,7 +421,7 @@ function _cerrarModalArch() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// ELIMINAR — soft delete en tabla (el archivo en storage se conserva)
+// ELIMINAR — soft delete en tabla
 // ═══════════════════════════════════════════════════════════════════
 function eliminarArchivoActual() {
   if (!archArchivoActual || !_sbClient) return;
@@ -317,6 +433,7 @@ function eliminarArchivoActual() {
     .eq('id', id)
     .then(function(res) {
       if (res.error) { alert('Error al eliminar: ' + (res.error.message || '')); return; }
+      console.log('[Archivos] Archivo eliminado:', id);
       _cerrarModalArch();
       cargarArchivos(fichaActualKey);
     });
@@ -324,6 +441,7 @@ function eliminarArchivoActual() {
 
 // ═══════════════════════════════════════════════════════════════════
 // DRAG & DROP
+// FIX #5: antes solo tomaba files[0]. Ahora pasa toda la FileList.
 // ═══════════════════════════════════════════════════════════════════
 function _initDragDrop() {
   var zone = document.getElementById('arch-drop-zone');
@@ -336,10 +454,10 @@ function _initDragDrop() {
     zone.addEventListener(ev, function(e) { e.preventDefault(); zone.classList.remove('over'); });
   });
   zone.addEventListener('drop', function(e) {
-    var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-    if (!file) return;
-    // Simular el evento del input
-    onArchivoSeleccionado({ files: [file] });
+    var files = e.dataTransfer && e.dataTransfer.files;
+    if (!files || !files.length) return;
+    // Pasar la FileList completa — igual que cuando seleccionás con el input
+    onArchivoSeleccionado({ files: files });
   });
 }
 
@@ -371,10 +489,76 @@ function _initLazyLoad() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// DEBUG — llamar desde la consola del browser: debugSupabase()
+// Verifica conexión, tabla y bucket.
+// ═══════════════════════════════════════════════════════════════════
+async function debugSupabase() {
+  console.log('══════════════════════════════');
+  console.log('DEBUG SUPABASE');
+  console.log('══════════════════════════════');
+  console.log('URL:', SUPABASE_URL);
+  console.log('ANON KEY:', SUPABASE_ANON_KEY ? SUPABASE_ANON_KEY.slice(0, 24) + '…' : '(vacía)');
+  console.log('BUCKET:', SUPABASE_BUCKET);
+  console.log('Cliente inicializado:', !!_sbClient);
+
+  if (!_sbClient) {
+    console.error('❌ Cliente no inicializado. Verificá SUPABASE_URL y SUPABASE_ANON_KEY.');
+    return;
+  }
+
+  // Test 1: tabla files
+  console.log('--- Test 1: tabla files ---');
+  try {
+    var dbTest = await _sbClient.from('files').select('id').limit(1);
+    if (dbTest.error) {
+      console.error('❌ Error tabla files:', dbTest.error.message, '| Código:', dbTest.error.code);
+      console.error('   → Verificá que la tabla exista y que RLS tenga política para anon.');
+    } else {
+      console.log('✅ Tabla files OK. Filas encontradas:', (dbTest.data || []).length);
+    }
+  } catch(e) { console.error('❌ Excepción tabla:', e); }
+
+  // Test 2: bucket
+  console.log('--- Test 2: bucket "' + SUPABASE_BUCKET + '" ---');
+  try {
+    var bucketTest = await _sbClient.storage.getBucket(SUPABASE_BUCKET);
+    if (bucketTest.error) {
+      console.error('❌ Error bucket:', bucketTest.error.message);
+      console.error('   → Verificá que el bucket exista y sea público, y que el RLS de storage permita anon.');
+    } else {
+      console.log('✅ Bucket OK:', JSON.stringify(bucketTest.data));
+    }
+  } catch(e) { console.error('❌ Excepción bucket:', e); }
+
+  // Test 3: subida de prueba (archivo texto de 5 bytes)
+  console.log('--- Test 3: upload de prueba ---');
+  try {
+    var blob     = new Blob(['test!'], { type: 'text/plain' });
+    var testPath = '_debug_test_' + Date.now() + '.txt';
+    var upTest   = await _sbClient.storage.from(SUPABASE_BUCKET).upload(testPath, blob, { upsert: true });
+    if (upTest.error) {
+      console.error('❌ Upload de prueba falló:', upTest.error.message);
+      console.error('   → El bucket existe pero los permisos de escritura bloquean la subida.');
+    } else {
+      var url = _sbClient.storage.from(SUPABASE_BUCKET).getPublicUrl(testPath).data.publicUrl;
+      console.log('✅ Upload de prueba OK. URL pública:', url);
+      // Limpiar archivo de prueba
+      await _sbClient.storage.from(SUPABASE_BUCKET).remove([testPath]);
+      console.log('✅ Archivo de prueba eliminado.');
+    }
+  } catch(e) { console.error('❌ Excepción upload prueba:', e); }
+
+  console.log('══════════════════════════════');
+  console.log('Paciente activo (fichaActualKey):', typeof fichaActualKey !== 'undefined' ? fichaActualKey : '(ninguno)');
+  console.log('══════════════════════════════');
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // HELPERS PRIVADOS
 // ═══════════════════════════════════════════════════════════════════
 function _resetFormArchivo() {
-  archPendingFile = null;
+  // FIX: resetear array, no una variable singular
+  archPendingFiles = [];
 
   var fi = document.getElementById('arch-file-input');
   if (fi) fi.value = '';
@@ -384,7 +568,12 @@ function _resetFormArchivo() {
   var wrap = document.getElementById('arch-preview-wrap');
   if (img)  { img.src = ''; img.style.display = 'none'; }
   if (vid)  { vid.pause(); vid.src = ''; vid.style.display = 'none'; }
-  if (wrap) wrap.style.display = 'none';
+  if (wrap) {
+    // Eliminar lista dinámica si existe
+    var prevList = wrap.querySelector('.arch-file-list');
+    if (prevList) prevList.remove();
+    wrap.style.display = 'none';
+  }
 
   var progWrap = document.getElementById('arch-progress-wrap');
   var progBar  = document.getElementById('arch-progress-bar');
@@ -408,9 +597,9 @@ function _resetFormArchivo() {
 }
 
 function _limpiarModuloArchivos() {
-  archivosData       = [];
-  filtroArchivos     = 'todos';
-  archArchivoActual  = null;
+  archivosData      = [];
+  filtroArchivos    = 'todos';
+  archArchivoActual = null;
   formArchivoVisible = false;
 
   var lista = document.getElementById('lista-archivos');
@@ -423,7 +612,7 @@ function _limpiarModuloArchivos() {
   if (btnSubir) { btnSubir.textContent = '+ Subir'; btnSubir.className = 'btn-primary'; }
 
   document.querySelectorAll('.arch-filtro-btn').forEach(function(b, i) {
-    b.classList.toggle('sel', i === 0); // 'Todos' siempre seleccionado al resetear
+    b.classList.toggle('sel', i === 0);
   });
 
   if (_archLazyObserver) { _archLazyObserver.disconnect(); _archLazyObserver = null; }
@@ -437,12 +626,11 @@ function _showArchErr(msg) {
   else      { err.textContent = '';  err.className = 'err'; }
 }
 
-// Escapar caracteres peligrosos para incluir en atributos HTML
 function _esc(str) {
   return (str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// ── Auto-init al cargar el script ────────────────────────────────
+// ── Auto-init ─────────────────────────────────────────────────────
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initArchivos);
 } else {
