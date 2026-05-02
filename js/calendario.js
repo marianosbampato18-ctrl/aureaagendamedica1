@@ -85,7 +85,24 @@ function calSetView(v) {
 function renderCal() {
   var isMobile = window.innerWidth < 600;
   if (isMobile && calView === 'semana') calView = 'dia';
-  if (calView === 'mes') { renderCalMes(); return; }
+
+  // Sincronizar visibilidad de header/scroll/mes-wrap según la vista actual.
+  // calSetView() lo hace cuando el usuario pulsa un botón; renderCal() lo
+  // necesita también para el render inicial (showPanel → renderCal).
+  var _header  = document.getElementById('cal-header');
+  var _scroll  = document.getElementById('cal-scroll');
+  var _mesWrap = document.getElementById('cal-mes-wrap');
+  if (calView === 'mes') {
+    if (_header)  _header.style.display  = 'none';
+    if (_scroll)  _scroll.style.display  = 'none';
+    if (_mesWrap) _mesWrap.className = 'cal-mes-wrap visible';
+    renderCalMes();
+    return;
+  } else {
+    if (_header)  _header.style.display  = '';
+    if (_scroll)  _scroll.style.display  = '';
+    if (_mesWrap) _mesWrap.className = 'cal-mes-wrap';
+  }
 
   var dias = calGetDias();
   var hoyStr = calHoyStr();
