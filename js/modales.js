@@ -13,11 +13,13 @@ function abrirModalEdit(turnoKey) {
     document.getElementById('ed-pac-nombre').value = p.nombre || t.paciente || '';
     document.getElementById('ed-pac-tel').value    = p.telefono || t.telefono || '';
     document.getElementById('ed-pac-dni').value    = p.dni || t.dni || '';
+    document.getElementById('ed-pac-mail').value   = p.email || '';
     document.getElementById('ed-pac-notas').value  = p.notas || '';
   } else {
     document.getElementById('ed-pac-nombre').value = t.paciente || '';
     document.getElementById('ed-pac-tel').value    = t.telefono || '';
     document.getElementById('ed-pac-dni').value    = t.dni || '';
+    document.getElementById('ed-pac-mail').value   = '';
     document.getElementById('ed-pac-notas').value  = '';
   }
   document.getElementById('ed-pac-err').className = 'err';
@@ -95,6 +97,7 @@ function guardarEdicionPaciente() {
   var nombre = document.getElementById('ed-pac-nombre').value.trim();
   var tel    = document.getElementById('ed-pac-tel').value.trim();
   var dni    = document.getElementById('ed-pac-dni').value.trim();
+  var mail   = (document.getElementById('ed-pac-mail').value || '').trim().toLowerCase();
   var notas  = document.getElementById('ed-pac-notas').value.trim();
   var err    = document.getElementById('ed-pac-err');
   if (!nombre) { err.textContent='El nombre es obligatorio.'; err.className='err visible'; return; }
@@ -106,7 +109,7 @@ function guardarEdicionPaciente() {
   ];
   if (t.pacienteKey) {
     promesas.push(db.ref('pacientes/'+t.pacienteKey).update({
-      nombre: nombre, telefono: tel, dni: dni, notas: notas
+      nombre: nombre, telefono: tel, dni: dni, email: mail, notas: notas
     }));
   }
   Promise.all(promesas).then(function(){

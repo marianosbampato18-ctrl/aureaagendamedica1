@@ -1268,6 +1268,7 @@ body.menu-open{ overflow:hidden; }
             <div class="field"><label>Teléfono</label><input type="tel" id="p-tel" placeholder="1165432100" inputmode="tel"/></div>
             <div class="field"><label>DNI</label><input type="text" id="p-dni" placeholder="38123456" inputmode="numeric"/></div>
           </div>
+          <div class="field"><label>Email</label><input type="email" id="p-mail" placeholder="ana@ejemplo.com" autocomplete="email" inputmode="email"/></div>
           <div class="field"><label>Notas generales</label><textarea id="p-notas" placeholder="Alergias, condiciones, observaciones..."></textarea></div>
           <div class="err" id="p-err"></div>
           <button class="btn-save" id="btn-save-pac" onclick="guardarPaciente()">Guardar historia clínica</button>
@@ -1282,9 +1283,13 @@ body.menu-open{ overflow:hidden; }
       <div id="ficha-detalle">
         <button class="back-btn" onclick="cerrarFicha()">← Volver a historias clínicas</button>
         <div class="ficha-header">
-          <div class="ficha-nombre" id="fd-nombre"></div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="ficha-nombre" id="fd-nombre"></div>
+            <div id="fd-id" style="font-size:11px;font-weight:700;color:var(--gold-dark);background:#FDF8EE;border:1px solid var(--gold);border-radius:20px;padding:3px 10px;letter-spacing:.04em;display:none"></div>
+          </div>
           <div class="ficha-dato" id="fd-tel"></div>
           <div class="ficha-dato" id="fd-dni"></div>
+          <div class="ficha-dato" id="fd-mail"></div>
           <div class="ficha-dato" style="font-style:italic;margin-top:8px" id="fd-notas"></div>
         </div>
 
@@ -1498,6 +1503,7 @@ body.menu-open{ overflow:hidden; }
         <div class="field"><label>Teléfono</label><input type="tel" id="ed-pac-tel" inputmode="tel"/></div>
         <div class="field"><label>DNI</label><input type="text" id="ed-pac-dni" inputmode="numeric"/></div>
       </div>
+      <div class="field"><label>Email</label><input type="email" id="ed-pac-mail" inputmode="email"/></div>
       <div class="field"><label>Notas generales del paciente</label><textarea id="ed-pac-notas"></textarea></div>
       <div class="err" id="ed-pac-err"></div>
       <button class="btn-save" onclick="guardarEdicionPaciente()">Guardar datos del paciente</button>

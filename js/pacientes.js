@@ -6,7 +6,7 @@ function toggleFormPac() {
   document.getElementById('form-pac').className='form-card'+(formPacVisible?' visible':'');
   document.getElementById('btn-nuevo-pac').className='btn-primary'+(formPacVisible?' active':'');
   document.getElementById('btn-nuevo-pac').textContent=formPacVisible?'✕ Cerrar':'+ Nueva historia clínica';
-  if(!formPacVisible){['p-nombre','p-tel','p-dni','p-notas'].forEach(function(id){document.getElementById(id).value='';});}
+  if(!formPacVisible){['p-nombre','p-tel','p-dni','p-mail','p-notas'].forEach(function(id){document.getElementById(id).value='';});}
 }
 
 function guardarPaciente() {
@@ -23,15 +23,29 @@ function guardarPaciente() {
   var errDni = validarDNI(dni);
   if (errDni)    { mostrarErrorValidacion(err, errDni); return; }
 
+  var mail  = (document.getElementById('p-mail').value || '').trim().toLowerCase();
+  var notas = document.getElementById('p-notas').value.trim();
+
   var btn=document.getElementById('btn-save-pac');
   btn.disabled=true;btn.textContent='Guardando…';
-  db.ref('pacientes').push({
-    nombre:nombre,
-    telefono:tel,
-    dni:dni,
-    notas:document.getElementById('p-notas').value.trim()
-  }).then(function(){btn.disabled=false;btn.textContent='Guardar historia clínica';toggleFormPac();})
-  .catch(function(e){btn.disabled=false;btn.textContent='Guardar historia clínica';manejarErrorFirebase(e,'Guardar paciente',err);});
+
+  db.ref('contadores/ultimoPacienteId').transaction(function(actual) {
+    return (actual || 0) + 1;
+  }).then(function(result) {
+    var nuevoId = result.snapshot.val();
+    return db.ref('pacientes').push({
+      pacienteId: nuevoId,
+      nombre: nombre,
+      telefono: tel,
+      dni: dni,
+      email: mail,
+      notas: notas
+    });
+  }).then(function(){
+    btn.disabled=false; btn.textContent='Guardar historia clínica'; toggleFormPac();
+  }).catch(function(e){
+    btn.disabled=false; btn.textContent='Guardar historia clínica'; manejarErrorFirebase(e,'Guardar paciente',err);
+  });
 }
 
 function filtrarFichas(query) {
@@ -42,7 +56,8 @@ function filtrarFichas(query) {
       var p = pacientesData[k];
       return (p.nombre||'').toLowerCase().includes(q) ||
              (p.telefono||'').includes(q) ||
-             (p.dni||'').includes(q);
+             (p.dni||'').includes(q) ||
+             (p.email||'').toLowerCase().includes(q);
     });
   }
   var lista = document.getElementById('lista-pacientes');
@@ -54,10 +69,11 @@ function filtrarFichas(query) {
   lista.innerHTML = keys.map(function(key) {
     var p = pacientesData[key];
     var hc = p.historial ? Object.keys(p.historial).length : 0;
+    var idBadge = p.pacienteId ? '<span style="font-size:10px;font-weight:700;color:var(--gold-dark);background:#FDF8EE;border:1px solid var(--gold);border-radius:20px;padding:2px 8px;margin-left:6px">#'+p.pacienteId+'</span>' : '';
     return '<div class="pac-card" id="pac-card-'+key+'" onclick="abrirFichaKey(\''+key+'\')">' +
       '<div class="pac-card-top"><div>' +
-        '<div class="pac-card-name">'+p.nombre+'</div>' +
-        '<div class="pac-card-sub">'+(p.telefono?'📞 '+p.telefono:'')+(p.dni?' · 🪪 '+p.dni:'')+'</div>' +
+        '<div class="pac-card-name">'+p.nombre+idBadge+'</div>' +
+        '<div class="pac-card-sub">'+(p.telefono?'📞 '+p.telefono:'')+(p.dni?' · 🪪 '+p.dni:'')+(p.email?' · ✉ '+p.email:'')+'</div>' +
       '</div><div style="display:flex;align-items:center">' +
         '<span class="pac-card-count">'+hc+' visita'+(hc!==1?'s':'')+'</span>' +
         '<span class="chevron">›</span>' +
@@ -75,8 +91,12 @@ function abrirFichaKey(key) {
   fichaActualKey=key;
   var p=pacientesData[key];
   document.getElementById('fd-nombre').textContent=p.nombre;
+  var idEl = document.getElementById('fd-id');
+  if (p.pacienteId) { idEl.textContent='#'+p.pacienteId; idEl.style.display='inline-block'; }
+  else { idEl.style.display='none'; }
   document.getElementById('fd-tel').textContent=p.telefono?'📞 '+p.telefono:'';
   document.getElementById('fd-dni').textContent=p.dni?'🪪 DNI '+p.dni:'';
+  document.getElementById('fd-mail').textContent=p.email?'✉ '+p.email:'';
   document.getElementById('fd-notas').textContent=p.notas||'';
   document.getElementById('fichas-lista').style.display='none';
   document.getElementById('ficha-detalle').style.display='block';
