@@ -5,7 +5,7 @@ function toggleFormPac() {
   formPacVisible=!formPacVisible;
   document.getElementById('form-pac').className='form-card'+(formPacVisible?' visible':'');
   document.getElementById('btn-nuevo-pac').className='btn-primary'+(formPacVisible?' active':'');
-  document.getElementById('btn-nuevo-pac').textContent=formPacVisible?'✕ Cerrar':'+ Nueva ficha';
+  document.getElementById('btn-nuevo-pac').textContent=formPacVisible?'✕ Cerrar':'+ Nueva historia clínica';
   if(!formPacVisible){['p-nombre','p-tel','p-dni','p-notas'].forEach(function(id){document.getElementById(id).value='';});}
 }
 
@@ -30,8 +30,8 @@ function guardarPaciente() {
     telefono:tel,
     dni:dni,
     notas:document.getElementById('p-notas').value.trim()
-  }).then(function(){btn.disabled=false;btn.textContent='Guardar ficha';toggleFormPac();})
-  .catch(function(e){btn.disabled=false;btn.textContent='Guardar ficha';manejarErrorFirebase(e,'Guardar paciente',err);});
+  }).then(function(){btn.disabled=false;btn.textContent='Guardar historia clínica';toggleFormPac();})
+  .catch(function(e){btn.disabled=false;btn.textContent='Guardar historia clínica';manejarErrorFirebase(e,'Guardar paciente',err);});
 }
 
 function filtrarFichas(query) {

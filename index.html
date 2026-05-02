@@ -575,6 +575,227 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
 @media (max-width: 400px) {
   .precio-footer-sep { display: none; }
 }
+
+/* ══════════════════════════════════════════════
+   HAMBURGER MENU — Drawer premium responsive
+   ══════════════════════════════════════════════ */
+.hamburger-btn{
+  display:none;
+  width:42px;height:42px;flex-shrink:0;
+  background:rgba(201,163,90,.08);
+  border:1px solid rgba(201,163,90,.35);
+  border-radius:12px;
+  cursor:pointer;
+  align-items:center;justify-content:center;
+  position:relative;
+  transition:transform .25s ease, box-shadow .25s ease, background .25s ease, border-color .25s ease;
+  -webkit-tap-highlight-color:transparent;
+  padding:0;
+}
+.hamburger-btn:hover{
+  transform:scale(1.06);
+  background:rgba(201,163,90,.14);
+  border-color:var(--gold);
+  box-shadow:0 0 0 4px rgba(201,163,90,.12), 0 4px 18px rgba(201,163,90,.25);
+}
+.hamburger-btn:active{ transform:scale(.96); }
+.hamburger-btn .ham-lines{
+  position:relative;
+  width:18px;height:14px;
+  display:block;
+}
+.hamburger-btn .ham-lines span{
+  position:absolute;
+  left:0;right:0;
+  height:1.5px;
+  background:linear-gradient(90deg, var(--gold-light), var(--gold));
+  border-radius:2px;
+  transition:transform .3s cubic-bezier(.7,0,.3,1), opacity .2s ease, top .3s cubic-bezier(.7,0,.3,1);
+}
+.hamburger-btn .ham-lines span:nth-child(1){ top:0; }
+.hamburger-btn .ham-lines span:nth-child(2){ top:50%; transform:translateY(-50%); }
+.hamburger-btn .ham-lines span:nth-child(3){ top:100%; transform:translateY(-100%); }
+.hamburger-btn.is-open .ham-lines span:nth-child(1){ top:50%; transform:translateY(-50%) rotate(45deg); }
+.hamburger-btn.is-open .ham-lines span:nth-child(2){ opacity:0; }
+.hamburger-btn.is-open .ham-lines span:nth-child(3){ top:50%; transform:translateY(-50%) rotate(-45deg); }
+
+/* OVERLAY */
+.menu-overlay{
+  position:fixed;inset:0;
+  background:rgba(14,10,5,.55);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  z-index:300;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease;
+}
+.menu-overlay.visible{
+  opacity:1;
+  pointer-events:auto;
+}
+
+/* DRAWER (mobile) / DROPDOWN (desktop) */
+.menu-panel{
+  position:fixed;
+  z-index:310;
+  background:linear-gradient(180deg, #2E2419 0%, #1F1810 100%);
+  border-left:1px solid rgba(201,163,90,.25);
+  box-shadow:-24px 0 60px rgba(0,0,0,.45);
+  display:flex;
+  flex-direction:column;
+  font-family:var(--font-body);
+  -webkit-overflow-scrolling:touch;
+  overflow-y:auto;
+}
+/* Mobile = drawer derecho */
+.menu-panel{
+  top:0;right:0;
+  height:100vh;
+  width:min(82vw, 320px);
+  transform:translateX(105%);
+  transition:transform .28s cubic-bezier(.6,.01,.2,1);
+}
+.menu-panel.visible{ transform:translateX(0); }
+
+/* Desktop = dropdown desde el header */
+@media (min-width:768px){
+  .menu-panel{
+    top:14px;right:14px;
+    height:auto;max-height:calc(100vh - 28px);
+    width:300px;
+    border:1px solid rgba(201,163,90,.3);
+    border-radius:18px;
+    box-shadow:0 24px 60px rgba(0,0,0,.45), 0 0 0 1px rgba(201,163,90,.05);
+    transform:translateY(-12px) scale(.96);
+    opacity:0;
+    transition:transform .22s cubic-bezier(.6,.01,.2,1), opacity .18s ease;
+    transform-origin:top right;
+  }
+  .menu-panel.visible{ transform:translateY(0) scale(1); opacity:1; }
+}
+
+.menu-header{
+  padding:24px 22px 18px;
+  border-bottom:1px solid rgba(201,163,90,.18);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.menu-header-eyebrow{
+  font-family:var(--font-display);
+  font-size:9px;font-weight:500;
+  color:var(--gold-light);
+  letter-spacing:.42em;
+  text-transform:uppercase;
+  opacity:.85;
+}
+.menu-header-title{
+  font-family:var(--font-display);
+  font-size:14px;font-weight:600;
+  color:var(--white);
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  margin-top:4px;
+  background:linear-gradient(180deg,#FFFFFF 0%,#F2E2BF 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.menu-close{
+  background:transparent;border:none;
+  color:rgba(255,255,255,.55);
+  font-size:22px;line-height:1;cursor:pointer;
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;
+  transition:color .2s, background .2s;
+}
+.menu-close:hover{ color:var(--gold-light); background:rgba(201,163,90,.1); }
+
+.menu-list{
+  list-style:none;
+  padding:14px 12px;
+  margin:0;
+  display:flex;flex-direction:column;
+  gap:2px;
+  flex:1;
+}
+.menu-item{
+  display:flex;align-items:center;gap:14px;
+  min-height:52px;
+  padding:12px 14px;
+  border-radius:12px;
+  cursor:pointer;
+  color:rgba(255,255,255,.78);
+  font-family:var(--font-display);
+  font-size:13px;
+  font-weight:500;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  border:1px solid transparent;
+  background:transparent;
+  text-align:left;
+  width:100%;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .2s ease, color .2s ease, border-color .2s ease, transform .15s ease;
+}
+.menu-item:hover{
+  background:rgba(201,163,90,.08);
+  color:var(--gold-light);
+}
+.menu-item:active{ transform:scale(.985); }
+.menu-item .menu-item-icon{
+  font-size:16px;
+  width:30px;height:30px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:8px;
+  background:rgba(201,163,90,.1);
+  border:1px solid rgba(201,163,90,.22);
+  flex-shrink:0;
+  transition:background .2s ease, border-color .2s ease, transform .2s ease;
+}
+.menu-item:hover .menu-item-icon{
+  background:rgba(201,163,90,.18);
+  border-color:rgba(201,163,90,.5);
+}
+.menu-item.active{
+  background:linear-gradient(135deg, rgba(140,111,47,.32) 0%, rgba(201,163,90,.18) 100%);
+  color:var(--gold-light);
+  border-color:rgba(201,163,90,.45);
+  box-shadow:inset 0 0 0 1px rgba(201,163,90,.05);
+}
+.menu-item.active .menu-item-icon{
+  background:linear-gradient(135deg, var(--gold-light), var(--gold));
+  border-color:var(--gold);
+  color:#1A130C;
+  box-shadow:0 4px 14px rgba(201,163,90,.35);
+}
+
+.menu-footer{
+  border-top:1px solid rgba(201,163,90,.18);
+  padding:14px 18px 22px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  flex-shrink:0;
+}
+.menu-footer-user{
+  font-size:11px;
+  color:rgba(255,255,255,.5);
+  letter-spacing:.06em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  flex:1;
+}
+
+/* Responsive: ocultar tabs en mobile, mostrar hamburguesa */
+@media (max-width:767px){
+  .nav-tabs{ display:none !important; }
+  .hamburger-btn{ display:inline-flex; }
+}
+@media (min-width:768px){
+  /* En desktop, los tabs siguen visibles y la hamburguesa queda oculta.
+     Si querés activarla también en desktop, sacá este display:none. */
+  .hamburger-btn{ display:none; }
+}
+
+/* Bloqueo de scroll cuando el menú está abierto */
+body.menu-open{ overflow:hidden; }
 </style>
 </head>
 <body>
@@ -637,7 +858,13 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
           <div class="hero-user" id="hero-user"></div>
         </div>
       </div>
-      <button class="btn-logout" onclick="logout()">Salir</button>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="btn-logout" onclick="logout()">Salir</button>
+        <button class="hamburger-btn" id="menu-toggle" type="button"
+                aria-label="Abrir menú" aria-haspopup="true" aria-expanded="false" aria-controls="menu-panel">
+          <span class="ham-lines"><span></span><span></span><span></span></span>
+        </button>
+      </div>
     </div>
     <div class="hero-divider"></div>
     <div class="metrics">
@@ -650,7 +877,7 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
     <div class="nav-tabs">
       <div class="nav-tab active" id="tab-agenda" onclick="showPanel('agenda')">📅 Lista</div>
       <div class="nav-tab" id="tab-cal" onclick="showPanel('cal')">🗓 Cal</div>
-      <div class="nav-tab" id="tab-fichas" onclick="showPanel('fichas')">👤 Fichas</div>
+      <div class="nav-tab" id="tab-fichas" onclick="showPanel('fichas')" title="Historias Clínicas">👤 H.C.</div>
       <div class="nav-tab" id="tab-caja" onclick="showPanel('caja')">💰 Caja</div>
       <div class="nav-tab" id="tab-precios" onclick="showPanel('precios')">💎 Precios</div>
     </div>
@@ -696,7 +923,7 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
               </div>
             </div>
             <div class="ficha-cargada" id="ficha-cargada">
-              <div class="ficha-cargada-title">✦ Ficha cargada automáticamente</div>
+              <div class="ficha-cargada-title">✦ Historia clínica cargada automáticamente</div>
               <div class="ficha-cargada-name" id="fc-nombre"></div>
               <div class="ficha-cargada-data" id="fc-data"></div>
               <div class="ficha-cargada-hist" id="fc-hist"></div>
@@ -819,10 +1046,10 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
     <div class="panel" id="panel-fichas">
       <div id="fichas-lista">
         <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
-          <button class="btn-primary" id="btn-nuevo-pac" onclick="toggleFormPac()">+ Nueva ficha</button>
+          <button class="btn-primary" id="btn-nuevo-pac" onclick="toggleFormPac()">+ Nueva historia clínica</button>
         </div>
         <div class="form-card" id="form-pac">
-          <div class="form-header"><div class="form-icon">👤</div><div><div class="form-title">Nueva ficha manual</div><div class="form-sub">Completá los datos del paciente</div></div></div>
+          <div class="form-header"><div class="form-icon">👤</div><div><div class="form-title">Nueva historia clínica manual</div><div class="form-sub">Completá los datos del paciente</div></div></div>
           <div class="field"><label>Nombre completo</label><input type="text" id="p-nombre" placeholder="Ej: Ana Rodríguez" autocomplete="name"/></div>
           <div class="grid-2">
             <div class="field"><label>Teléfono</label><input type="tel" id="p-tel" placeholder="1165432100" inputmode="tel"/></div>
@@ -830,7 +1057,7 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
           </div>
           <div class="field"><label>Notas generales</label><textarea id="p-notas" placeholder="Alergias, condiciones, observaciones..."></textarea></div>
           <div class="err" id="p-err"></div>
-          <button class="btn-save" id="btn-save-pac" onclick="guardarPaciente()">Guardar ficha</button>
+          <button class="btn-save" id="btn-save-pac" onclick="guardarPaciente()">Guardar historia clínica</button>
         </div>
         <div class="section-label">Pacientes</div>
         <div style="position:relative;margin-bottom:12px">
@@ -840,7 +1067,7 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
       </div>
 
       <div id="ficha-detalle">
-        <button class="back-btn" onclick="cerrarFicha()">← Volver a fichas</button>
+        <button class="back-btn" onclick="cerrarFicha()">← Volver a historias clínicas</button>
         <div class="ficha-header">
           <div class="ficha-nombre" id="fd-nombre"></div>
           <div class="ficha-dato" id="fd-tel"></div>
@@ -1126,6 +1353,25 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
 </div>
 
 <!-- ═══════════════════════════════════════════
+     HAMBURGER MENU — Overlay + Drawer
+     ═══════════════════════════════════════════ -->
+<div class="menu-overlay" id="menu-overlay" aria-hidden="true"></div>
+<aside class="menu-panel" id="menu-panel" role="dialog" aria-modal="true" aria-labelledby="menu-title" aria-hidden="true">
+  <div class="menu-header">
+    <div>
+      <div class="menu-header-eyebrow">Áurea Clinic</div>
+      <div class="menu-header-title" id="menu-title">Navegación</div>
+    </div>
+    <button class="menu-close" id="menu-close" type="button" aria-label="Cerrar menú">×</button>
+  </div>
+  <ul class="menu-list" id="menu-list" role="menu"></ul>
+  <div class="menu-footer">
+    <div class="menu-footer-user" id="menu-footer-user"></div>
+    <button class="btn-logout" onclick="logout()" style="margin-top:0">Salir</button>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════════════════
      SCRIPTS — Orden de carga garantizado
      ═══════════════════════════════════════════ -->
 
@@ -1147,6 +1393,7 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
 <script src="js/precios.js"></script>     <!-- Tratamientos y precios -->
 <script src="js/modales.js"></script>     <!-- Modales de edición -->
 <script src="js/calendario.js"></script>  <!-- Calendario interactivo -->
+<script src="js/menu.js"></script>        <!-- Menú hamburguesa responsive -->
 
 </body>
 </html>

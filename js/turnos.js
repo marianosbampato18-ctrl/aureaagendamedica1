@@ -173,7 +173,7 @@ function cardTurnoHTML(key, t) {
   if (t.estado==='completado' && resta > 0) {
     acc += '<button class="act-btn btn-ok" onclick="abrirModalCobro(\''+key+'\')">💰 Cobrar saldo</button>';
   }
-  if (t.pacienteKey) acc += '<button class="act-btn btn-ficha" onclick="abrirFichaKey(\''+t.pacienteKey+'\')">Ver ficha</button>';
+  if (t.pacienteKey) acc += '<button class="act-btn btn-ficha" title="Ver historia clínica" onclick="abrirFichaKey(\''+t.pacienteKey+'\')">Ver H.C.</button>';
   acc += '<button class="act-btn btn-del" onclick="eliminarTurno(\''+key+'\')">Eliminar</button>';
 
   var lineaPrecio = '';
