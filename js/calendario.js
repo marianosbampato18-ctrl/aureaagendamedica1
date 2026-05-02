@@ -267,9 +267,15 @@ function calSlotClick(e) {
   setTimeout(function() {
     if (!formTurnoVisible) toggleFormTurno();
     var fFecha = document.getElementById('t-fecha');
-    var fHora  = document.getElementById('t-hora');
     if (fFecha) fFecha.value = fecha;
-    if (fHora)  fHora.value  = hora;
+    // Hora en selects t-hh / t-mm
+    if (hora) {
+      var partes = hora.split(':');
+      var hh = document.getElementById('t-hh');
+      var mm = document.getElementById('t-mm');
+      if (hh) hh.value = partes[0];
+      if (mm) mm.value = partes[1] || '00';
+    }
   }, 100);
 }
 
@@ -469,7 +475,7 @@ function renderCalMes() {
       var t = item.t;
       var cat = calCategoria(t);
       var clsCat = t.estado==='cancelado' ? 'cat-cancelado' : 'cat-'+cat;
-      return '<div class="cal-mes-ev '+clsCat+'" onclick="calMesClickTurno(\''+item.key+'\')" title="'+(t.paciente||'')+'">'+
+      return '<div class="cal-mes-ev '+clsCat+'" onclick="calMesClickTurno(\''+item.key+'\', event)" title="'+(t.paciente||'')+'">'+
         '<span class="cal-mes-ev-icon">'+calIcono(cat)+'</span>'+
         '<span class="cal-mes-ev-txt">'+(t.tratamiento||t.paciente||'Turno')+'</span>'+
         '<span class="cal-mes-ev-hora">'+(t.hora||'')+'</span>'+
@@ -492,15 +498,13 @@ function renderCalMes() {
 }
 
 function calMesClickDia(fechaStr) {
-  // Click en día vacío → nuevo turno con esa fecha
-  showPanel('agenda');
-  setTimeout(function() {
-    if (typeof formTurnoVisible !== 'undefined' && !formTurnoVisible && typeof toggleFormTurno === 'function') toggleFormTurno();
-    var fFecha = document.getElementById('t-fecha');
-    if (fFecha) fFecha.value = fechaStr;
-  }, 150);
+  // Click en día → abrir vista día de ese día en el calendario
+  calBaseDate = new Date(fechaStr + 'T12:00:00');
+  calSetView('dia');
 }
 
-function calMesClickTurno(key) {
+function calMesClickTurno(key, event) {
+  // Evitar que el clic suba al día padre y cambie de vista
+  if (event) event.stopPropagation();
   if (typeof abrirModalEdit === 'function') abrirModalEdit(key);
 }
