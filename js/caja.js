@@ -616,7 +616,7 @@ function toggleFormTurno() {
 }
 
 function limpiarFormTurno() {
-  ['t-pac-nuevo','t-tel','t-dni','t-pac-buscar','t-trat','t-fecha','t-notas','pa-monto'].forEach(function(id){
+  ['t-pac-nuevo','t-tel','t-dni','t-mail','t-pac-buscar','t-trat','t-fecha','t-notas','pa-monto'].forEach(function(id){
     var el = document.getElementById(id); if(el) el.value = '';
   });
   document.getElementById('t-hh').value = '';

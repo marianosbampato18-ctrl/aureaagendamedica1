@@ -31,12 +31,13 @@ function guardarTurno() {
   if (!fecha) { mostrarErrorValidacion(err, 'La fecha es obligatoria.'); return; }
   if (!hora)  { mostrarErrorValidacion(err, 'La hora es obligatoria.'); return; }
 
-  var nomPac='', telPac='', dniPac='';
+  var nomPac='', telPac='', dniPac='', mailPac='';
 
   if (pvSeleccion === true) {
-    nomPac = document.getElementById('t-pac-nuevo').value.trim();
-    telPac = document.getElementById('t-tel').value.trim();
-    dniPac = document.getElementById('t-dni').value.trim();
+    nomPac  = document.getElementById('t-pac-nuevo').value.trim();
+    telPac  = document.getElementById('t-tel').value.trim();
+    dniPac  = document.getElementById('t-dni').value.trim();
+    mailPac = (document.getElementById('t-mail').value || '').trim().toLowerCase();
     if (!nomPac) { err.textContent='Ingresá el nombre del paciente.'; err.className='err visible'; return; }
   } else {
     if (!pacienteSeleccionadoKey) { err.textContent='Seleccioná un paciente de la lista.'; err.className='err visible'; return; }
@@ -75,11 +76,16 @@ function guardarTurno() {
 
   var notas = document.getElementById('t-notas').value.trim();
 
-  // Si es primera vez → crear ficha automática
+  // Si es primera vez → crear ficha automática con ID único
   var promesaFicha = Promise.resolve(pacienteSeleccionadoKey);
   if (pvSeleccion === true) {
-    promesaFicha = db.ref('pacientes').push({
-      nombre: nomPac, telefono: telPac, dni: dniPac, notas: ''
+    promesaFicha = db.ref('contadores/ultimoPacienteId').transaction(function(actual) {
+      return (actual || 0) + 1;
+    }).then(function(result) {
+      return db.ref('pacientes').push({
+        pacienteId: result.snapshot.val(),
+        nombre: nomPac, telefono: telPac, dni: dniPac, email: mailPac, notas: ''
+      });
     }).then(function(ref){ return ref.key; });
   }
 
