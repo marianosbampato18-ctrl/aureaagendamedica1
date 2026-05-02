@@ -9,6 +9,7 @@
 <title>Dra. Bruna Nara · Agenda</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
@@ -1028,6 +1029,51 @@ body.menu-open{ overflow:hidden; }
   .cal-mes-leyenda{ padding:12px 20px; gap:18px; }
   .cal-mes-leyenda span{ font-size:12px; }
 }
+
+/* ══════════════════════════════════════════════
+   ARCHIVOS CLÍNICOS — módulo multimedia
+   ══════════════════════════════════════════════ */
+
+/* Filtros de categoría */
+.arch-filtros{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.arch-filtro-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--ivory);color:var(--brown-soft);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;-webkit-tap-highlight-color:transparent;letter-spacing:.04em}
+.arch-filtro-btn.sel{border-color:var(--gold);background:#F5EFE4;color:var(--gold-dark)}
+
+/* Zona de drop */
+.arch-drop-zone{border:2px dashed var(--border);border-radius:16px;padding:26px 16px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:var(--ivory);position:relative;-webkit-tap-highlight-color:transparent}
+.arch-drop-zone.over,.arch-drop-zone:active{border-color:var(--gold);background:#F5EFE4}
+.arch-drop-icon{font-size:30px;margin-bottom:8px;pointer-events:none}
+.arch-drop-text{font-size:13px;font-weight:600;color:var(--brown);margin-bottom:3px;pointer-events:none;word-break:break-all}
+.arch-drop-sub{font-size:11px;color:var(--brown-soft);pointer-events:none}
+#arch-preview-img,#arch-preview-vid{max-width:100%;max-height:200px;border-radius:10px;margin-top:12px;object-fit:contain;display:block;margin-left:auto;margin-right:auto}
+
+/* Barra de progreso */
+.arch-progress-wrap{margin:10px 0 4px;background:var(--ivory);border-radius:8px;overflow:hidden;height:7px}
+.arch-progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--gold-dark),var(--gold));transition:width .25s}
+.arch-progress-txt{font-size:11px;color:var(--brown-soft);text-align:center;margin-top:5px}
+
+/* Galería */
+.arch-galeria{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:24px}
+.arch-galeria .empty{grid-column:1/-1;text-align:center}
+.arch-thumb{position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;cursor:pointer;background:var(--ivory);-webkit-tap-highlight-color:transparent}
+.arch-thumb img,.arch-thumb video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.arch-thumb-badge{position:absolute;bottom:5px;left:5px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:.06em;background:rgba(42,33,24,.68);color:#fff;line-height:1.5}
+.arch-thumb-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;background:rgba(42,33,24,.62);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;pointer-events:none}
+@media (min-width:480px){.arch-galeria{grid-template-columns:repeat(4,1fr)}}
+
+/* Modal visor */
+.modal-arch-overlay{position:fixed;inset:0;background:rgba(14,10,5,.84);z-index:9999;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.modal-arch-card{background:var(--white);border-radius:24px 24px 0 0;width:100%;max-width:520px;padding:20px 18px 40px;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.modal-arch-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.modal-arch-cat{font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--gold-dark);letter-spacing:.28em;text-transform:uppercase}
+.modal-arch-fecha{font-size:12px;color:var(--brown-soft);margin-top:3px}
+.modal-arch-close{background:var(--ivory);border:none;border-radius:50%;width:34px;height:34px;font-size:17px;cursor:pointer;color:var(--brown-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.modal-arch-media{margin-bottom:14px;background:var(--ivory);border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:100px}
+.modal-arch-media img,.modal-arch-media video{width:100%;max-height:62vh;object-fit:contain;display:block}
+.modal-arch-notas{font-size:13px;color:var(--brown-mid);line-height:1.65;margin-bottom:16px;padding:10px 13px;background:var(--ivory);border-radius:10px;display:none}
+.modal-arch-notas.visible{display:block}
+.btn-del-archivo{width:100%;background:transparent;color:#A0392B;border:1px solid rgba(192,88,80,.4);border-radius:12px;padding:13px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:background .2s}
+.btn-del-archivo:active{background:#FDF0EE}
 </style>
 </head>
 <body>
@@ -1375,6 +1421,71 @@ body.menu-open{ overflow:hidden; }
           <button class="btn-save" id="btn-save-hist" onclick="guardarHistorial()">Guardar entrada</button>
         </div>
         <div id="lista-historial"><div class="empty"><div class="empty-icon">📋</div>Sin entradas aún</div></div>
+
+        <!-- ── ARCHIVOS CLÍNICOS ── -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;margin-top:24px">
+          <div class="section-label" style="margin:0;flex:1">📸 Archivos clínicos</div>
+          <button class="btn-primary" id="btn-subir-archivo" onclick="toggleFormArchivo()" style="margin-left:12px;font-size:12px;padding:7px 14px">+ Subir</button>
+        </div>
+
+        <!-- Filtros -->
+        <div class="arch-filtros" id="arch-filtros">
+          <button class="arch-filtro-btn sel" onclick="setFiltroArchivos(this,'todos')">Todos</button>
+          <button class="arch-filtro-btn" onclick="setFiltroArchivos(this,'antes')">Antes</button>
+          <button class="arch-filtro-btn" onclick="setFiltroArchivos(this,'despues')">Después</button>
+          <button class="arch-filtro-btn" onclick="setFiltroArchivos(this,'tratamiento')">Tratamiento</button>
+        </div>
+
+        <!-- Formulario upload -->
+        <div class="form-card" id="form-archivo">
+          <div class="form-header">
+            <div class="form-icon">📸</div>
+            <div>
+              <div class="form-title">Subir archivo</div>
+              <div class="form-sub">Imágenes hasta 10 MB · Videos hasta 50 MB</div>
+            </div>
+          </div>
+
+          <!-- Drop zone -->
+          <div class="arch-drop-zone" id="arch-drop-zone" onclick="document.getElementById('arch-file-input').click()">
+            <div class="arch-drop-icon">📁</div>
+            <div class="arch-drop-text">Tocá o arrastrá aquí</div>
+            <div class="arch-drop-sub">JPG · PNG · HEIC · MP4 · MOV</div>
+            <div id="arch-preview-wrap" style="display:none">
+              <img id="arch-preview-img" style="display:none" alt="preview"/>
+              <video id="arch-preview-vid" style="display:none" controls muted playsinline></video>
+            </div>
+          </div>
+          <input type="file" id="arch-file-input" accept="image/*,video/*" style="display:none" onchange="onArchivoSeleccionado(this)"/>
+
+          <div class="field" style="margin-top:14px">
+            <label>Categoría</label>
+            <select id="arch-categoria">
+              <option value="tratamiento">Tratamiento</option>
+              <option value="antes">Antes</option>
+              <option value="despues">Después</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Notas (opcional)</label>
+            <textarea id="arch-notas" placeholder="Descripción del archivo, zona tratada..."></textarea>
+          </div>
+
+          <div id="arch-progress-wrap" style="display:none">
+            <div class="arch-progress-wrap"><div class="arch-progress-bar" id="arch-progress-bar"></div></div>
+            <div class="arch-progress-txt" id="arch-progress-txt">Subiendo…</div>
+          </div>
+
+          <div class="err" id="arch-err"></div>
+          <button class="btn-save" id="btn-confirmar-upload" onclick="confirmarUpload()" disabled>Subir archivo</button>
+        </div>
+
+        <!-- Galería -->
+        <div id="lista-archivos" class="arch-galeria">
+          <div class="empty"><div class="empty-icon">📸</div>Sin archivos aún</div>
+        </div>
+
       </div>
     </div>
     <!-- PANEL CAJA -->
@@ -1620,6 +1731,27 @@ body.menu-open{ overflow:hidden; }
 </div>
 
 <!-- ═══════════════════════════════════════════
+     MODAL VISOR DE ARCHIVO CLÍNICO
+     ═══════════════════════════════════════════ -->
+<div id="modal-arch-view" class="modal-arch-overlay" style="display:none" onclick="cerrarModalArchivoView(event)">
+  <div class="modal-arch-card">
+    <div class="modal-arch-top">
+      <div>
+        <div class="modal-arch-cat" id="mav-categoria"></div>
+        <div class="modal-arch-fecha" id="mav-fecha"></div>
+      </div>
+      <button class="modal-arch-close" onclick="_cerrarModalArch()">✕</button>
+    </div>
+    <div class="modal-arch-media">
+      <img id="mav-img" style="display:none" alt="archivo clínico"/>
+      <video id="mav-vid" style="display:none" controls muted playsinline></video>
+    </div>
+    <div id="mav-notas" class="modal-arch-notas"></div>
+    <button class="btn-del-archivo" onclick="eliminarArchivoActual()">🗑 Eliminar archivo</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
      HAMBURGER MENU — Overlay + Drawer
      ═══════════════════════════════════════════ -->
 <div class="menu-overlay" id="menu-overlay" aria-hidden="true"></div>
@@ -1660,6 +1792,7 @@ body.menu-open{ overflow:hidden; }
 <script src="js/modales.js"></script>     <!-- Modales de edición -->
 <script src="js/calendario.js"></script>  <!-- Calendario interactivo -->
 <script src="js/menu.js"></script>        <!-- Menú hamburguesa responsive -->
+<script src="js/archivos.js"></script>    <!-- Módulo archivos clínicos (Supabase) -->
 
 </body>
 </html>
