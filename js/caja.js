@@ -60,7 +60,7 @@ function abrirModalCobro(turnoKey) {
   document.getElementById('cobro-err').className = 'err';
   document.getElementById('cobro-pagos-lista').innerHTML = '';
 
-  // Si hay deuda, sugerir cobrar el resto. Si no hay deuda, igual permitir registrar.
+  // Si hay deuda, sugerir cobrar el resto. Si no hay deuda, no agregar fila (ya está pagado).
   if (resta > 0) {
     filasCobroPago.push({ monto: resta, metodo: 'efectivo' });
     var idx = 0;
@@ -74,8 +74,6 @@ function abrirModalCobro(turnoKey) {
       '<input type="number" value="'+resta+'" inputmode="numeric" style="flex:1;padding:12px 14px;font-size:16px;border:1px solid var(--border);border-radius:12px;background:var(--ivory);color:var(--brown);font-family:inherit;outline:none" oninput="filasCobroPago['+idx+'].monto=this.value;actualizarTotalesCobro()"/>' +
       '<button class="del-pago" onclick="eliminarFilaPago('+idx+')">✕</button>';
     document.getElementById('cobro-pagos-lista').appendChild(div);
-  } else {
-    agregarFilaPago();
   }
 
   document.getElementById('modal-cobro').className = 'modal-overlay visible';
@@ -151,7 +149,27 @@ function actualizarTotalesCobro() {
 function confirmarCobro() {
   var t = turnosData[turnoCobroKey];
   var pagosValidos = filasCobroPago.filter(function(f){ return f && parseFloat(f.monto) > 0; });
-  if (!pagosValidos.length) { document.getElementById('cobro-err').textContent='Ingresá al menos un monto.'; document.getElementById('cobro-err').className='err visible'; return; }
+  if (!pagosValidos.length) {
+    var _precioChk = parseFloat(t.precio) || 0;
+    var _vChk = buscarVentaDeTurno(turnoCobroKey);
+    if (_vChk && _vChk.venta.montoTotal) _precioChk = parseFloat(_vChk.venta.montoTotal);
+    var _pagadoChk = totalPagadoTurno(turnoCobroKey);
+    if (_pagadoChk >= _precioChk && _precioChk > 0) {
+      // Turno ya saldado: marcar como completado sin exigir nuevo pago
+      db.ref('turnos/'+turnoCobroKey).update({ estado: 'completado' });
+      if (t && t.pacienteKey) {
+        db.ref('pacientes/'+t.pacienteKey+'/historial').push({
+          fecha: t.fecha, tratamiento: t.tratamiento, productos: '', notas: t.notas||'', auto: true
+        });
+      }
+      document.getElementById('modal-cobro').className = 'modal-overlay';
+      turnoCobroKey = null;
+      return;
+    }
+    document.getElementById('cobro-err').textContent='Ingresá al menos un monto.';
+    document.getElementById('cobro-err').className='err visible';
+    return;
+  }
   var montoTotalNuevo = pagosValidos.reduce(function(s,f){ return s + parseFloat(f.monto); }, 0);
   var hoy = new Date().toISOString().split('T')[0];
   var precioTotal = parseFloat(t.precio) || 0;
