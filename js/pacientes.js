@@ -29,18 +29,14 @@ function guardarPaciente() {
   var btn=document.getElementById('btn-save-pac');
   btn.disabled=true;btn.textContent='Guardando…';
 
-  db.ref('contadores/ultimoPacienteId').transaction(function(actual) {
-    return (actual || 0) + 1;
-  }).then(function(result) {
-    var nuevoId = result.snapshot.val();
-    return db.ref('pacientes').push({
-      pacienteId: nuevoId,
-      nombre: nombre,
-      telefono: tel,
-      dni: dni,
-      email: mail,
-      notas: notas
-    });
+  var nuevoId = siguienteIdPaciente();
+  db.ref('pacientes').push({
+    pacienteId: nuevoId,
+    nombre: nombre,
+    telefono: tel,
+    dni: dni,
+    email: mail,
+    notas: notas
   }).then(function(){
     btn.disabled=false; btn.textContent='Guardar historia clínica'; toggleFormPac();
   }).catch(function(e){

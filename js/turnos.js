@@ -128,13 +128,9 @@ function guardarTurno() {
   // Si es primera vez → crear ficha automática con ID único
   var promesaFicha = Promise.resolve(pacienteSeleccionadoKey);
   if (pvSeleccion === true) {
-    promesaFicha = db.ref('contadores/ultimoPacienteId').transaction(function(actual) {
-      return (actual || 0) + 1;
-    }).then(function(result) {
-      return db.ref('pacientes').push({
-        pacienteId: result.snapshot.val(),
-        nombre: nomPac, telefono: telPac, dni: dniPac, email: mailPac, notas: ''
-      });
+    promesaFicha = db.ref('pacientes').push({
+      pacienteId: siguienteIdPaciente(),
+      nombre: nomPac, telefono: telPac, dni: dniPac, email: mailPac, notas: ''
     }).then(function(ref){ return ref.key; });
   }
 

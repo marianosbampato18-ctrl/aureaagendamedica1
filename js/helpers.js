@@ -50,6 +50,17 @@ function manejarErrorFirebase(e, contexto, elErr) {
   return msgFinal;
 }
 
+// ── ID DE PACIENTE ────────────────────────────────────────────
+// Calcula el siguiente ID único buscando el máximo existente en memoria.
+function siguienteIdPaciente() {
+  var max = 0;
+  Object.keys(pacientesData).forEach(function(k) {
+    var id = parseInt(pacientesData[k].pacienteId) || 0;
+    if (id > max) max = id;
+  });
+  return max + 1;
+}
+
 // ── VALIDACIONES ───────────────────────────────────────────────
 
 function validarTextoObligatorio(valor, campo) {
