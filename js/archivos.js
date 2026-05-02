@@ -1,67 +1,49 @@
 // ═══════════════════════════════════════════════════════════════════
 // ARCHIVOS — Historia clínica multimedia
-// Backend: Firebase Storage (bucket ya configurado en config.js)
-//          Firebase Realtime DB (pacientes/{key}/archivos/)
 //
-// NO requiere Supabase ni credenciales adicionales.
+// Backend: Firebase Realtime Database (sin Storage, sin billing)
+// Las imágenes se comprimen con Canvas y se guardan como base64
+// en pacientes/{key}/archivos/{pushKey}
+//
+// Límites: imágenes hasta 10 MB · videos no soportados
+// Cada imagen se comprime a ≈ 1280px / JPEG 82% → típico 100-350 KB
 // ═══════════════════════════════════════════════════════════════════
 
 // ── Estado ────────────────────────────────────────────────────────
-var archivosData      = [];     // archivos del paciente abierto
-var filtroArchivos    = 'todos';
-var archArchivoActual = null;   // archivo abierto en el modal visor
-var archPendingFiles  = [];     // archivos seleccionados, listos para subir
+var archivosData       = [];
+var filtroArchivos     = 'todos';
+var archArchivoActual  = null;
+var archPendingFiles   = [];
 var formArchivoVisible = false;
 var _archLazyObserver  = null;
 
+// ── Config de compresión ──────────────────────────────────────────
+var ARCH_MAX_WIDTH   = 1280;  // px lado más largo
+var ARCH_QUALITY     = 0.82;  // JPEG quality
+var ARCH_MAX_BYTES   = 10 * 1024 * 1024; // 10 MB antes de comprimir
+
 // ═══════════════════════════════════════════════════════════════════
-// INIT — se llama al cargar el script
+// INIT
 // ═══════════════════════════════════════════════════════════════════
 function initArchivos() {
   _initDragDrop();
   _patchearFunciones();
-  console.log('[Archivos] Módulo listo. Backend: Firebase Storage.');
+  console.log('[Archivos] Módulo listo. Backend: Firebase DB + Canvas compression.');
 }
 
-// Devuelve la instancia de Firebase Storage, o null si aún no inició.
-function _getStorage() {
-  if (typeof firebase === 'undefined') {
-    console.error('[Archivos] Firebase SDK no disponible.');
-    return null;
-  }
-  if (!firebase.apps || !firebase.apps.length) {
-    console.error('[Archivos] Firebase no inicializado aún.');
-    return null;
-  }
-  try {
-    return firebase.storage();
-  } catch (e) {
-    console.error('[Archivos] firebase.storage() falló:', e.message);
-    return null;
-  }
-}
-
-// Parchea abrirFichaKey y cerrarFicha sin tocar pacientes.js
 function _patchearFunciones() {
   var _origAbrir  = typeof window.abrirFichaKey === 'function' ? window.abrirFichaKey : null;
   var _origCerrar = typeof window.cerrarFicha   === 'function' ? window.cerrarFicha   : null;
-
   if (_origAbrir) {
-    window.abrirFichaKey = function(key) {
-      _origAbrir(key);
-      cargarArchivos(key);
-    };
+    window.abrirFichaKey = function(key) { _origAbrir(key); cargarArchivos(key); };
   }
   if (_origCerrar) {
-    window.cerrarFicha = function() {
-      _origCerrar();
-      _limpiarModuloArchivos();
-    };
+    window.cerrarFicha = function() { _origCerrar(); _limpiarModuloArchivos(); };
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// CARGAR — lee metadata de Firebase DB
+// CARGAR — lee desde Firebase DB
 // ═══════════════════════════════════════════════════════════════════
 function cargarArchivos(patientId) {
   var lista = document.getElementById('lista-archivos');
@@ -73,17 +55,16 @@ function cargarArchivos(patientId) {
       .map(function(k) { return Object.assign({ id: k }, data[k]); })
       .filter(function(f) { return !f.eliminado; })
       .sort(function(a, b) { return (b.fecha || '').localeCompare(a.fecha || ''); });
-
-    console.log('[Archivos] Cargados:', archivosData.length, 'archivos para paciente', patientId);
+    console.log('[Archivos] Cargados:', archivosData.length, 'para paciente', patientId);
     renderGaleria();
   }, function(err) {
     console.error('[Archivos] Error al cargar:', err);
-    if (lista) lista.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>Error al cargar archivos</div>';
+    if (lista) lista.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>Error al cargar</div>';
   });
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// RENDER — galería con filtro activo
+// RENDER — galería con filtro
 // ═══════════════════════════════════════════════════════════════════
 function renderGaleria() {
   var lista = document.getElementById('lista-archivos');
@@ -101,21 +82,16 @@ function renderGaleria() {
 
   var catLabels = { antes: 'Antes', despues: 'Después', tratamiento: 'Tratamiento' };
 
+  // Las imágenes ya están como dataUrl — se muestran directo, sin lazy load remoto
   lista.innerHTML = filtered.map(function(f) {
-    var isVideo  = f.tipo === 'video';
     var catLabel = catLabels[f.categoria] || f.categoria || '';
-    var mediaTag = isVideo
-      ? '<video data-src="' + _esc(f.url) + '" muted playsinline preload="none"></video>'
-      : '<img data-src="' + _esc(f.url) + '" alt="' + _esc(catLabel) + '"/>';
-
+    // Usar thumbnail si existe, si no, el dataUrl completo
+    var src = f.thumb || f.dataUrl || '';
     return '<div class="arch-thumb" onclick="abrirModalArchivoView(\'' + f.id + '\')">' +
-      mediaTag +
+      '<img src="' + _esc(src) + '" alt="' + _esc(catLabel) + '" loading="lazy"/>' +
       '<div class="arch-thumb-badge">' + catLabel + '</div>' +
-      (isVideo ? '<div class="arch-thumb-play">▶</div>' : '') +
     '</div>';
   }).join('');
-
-  _initLazyLoad();
 }
 
 function setFiltroArchivos(btn, cat) {
@@ -142,7 +118,7 @@ function toggleFormArchivo() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// SELECCIÓN — valida y prepara archivos (soporta múltiples)
+// SELECCIÓN DE ARCHIVOS — solo imágenes, validación
 // ═══════════════════════════════════════════════════════════════════
 function onArchivoSeleccionado(input) {
   var fileList = input.files;
@@ -154,15 +130,13 @@ function onArchivoSeleccionado(input) {
   for (var i = 0; i < fileList.length; i++) {
     var file    = fileList[i];
     var isImage = file.type.startsWith('image/');
-    var isVideo = file.type.startsWith('video/');
 
-    if (!isImage && !isVideo) {
-      errores.push('"' + file.name + '" no es imagen ni video.');
+    if (!isImage) {
+      errores.push('"' + file.name + '": solo se admiten imágenes (JPG, PNG, HEIC).');
       continue;
     }
-    var maxBytes = isImage ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
-    if (file.size > maxBytes) {
-      errores.push('"' + file.name + '" supera el límite (' + (isImage ? '10 MB' : '50 MB') + ').');
+    if (file.size > ARCH_MAX_BYTES) {
+      errores.push('"' + file.name + '": supera 10 MB.');
       continue;
     }
     archPendingFiles.push(file);
@@ -176,14 +150,13 @@ function onArchivoSeleccionado(input) {
     return;
   }
 
-  console.log('[Archivos] Archivos válidos seleccionados:', archPendingFiles.length);
+  console.log('[Archivos] Seleccionados:', archPendingFiles.length, 'imagen(es) válida(s)');
 
-  // Texto en la zona de drop
   var dropText = document.querySelector('#arch-drop-zone .arch-drop-text');
   if (dropText) {
     dropText.textContent = archPendingFiles.length === 1
       ? archPendingFiles[0].name
-      : archPendingFiles.length + ' archivos seleccionados';
+      : archPendingFiles.length + ' imágenes seleccionadas';
   }
 
   _renderPreviewLista(archPendingFiles);
@@ -191,23 +164,23 @@ function onArchivoSeleccionado(input) {
   var btn = document.getElementById('btn-confirmar-upload');
   if (btn) {
     btn.disabled    = false;
-    btn.textContent = archPendingFiles.length === 1 ? 'Subir archivo' : 'Subir ' + archPendingFiles.length + ' archivos';
+    btn.textContent = archPendingFiles.length === 1
+      ? 'Subir imagen'
+      : 'Subir ' + archPendingFiles.length + ' imágenes';
   }
 }
 
-// Preview: imagen simple (1 archivo) o lista de nombres (varios)
+// Preview: imagen simple si es 1, lista de nombres si son varias
 function _renderPreviewLista(files) {
   var wrap = document.getElementById('arch-preview-wrap');
   var img  = document.getElementById('arch-preview-img');
-  var vid  = document.getElementById('arch-preview-vid');
   if (!wrap) return;
 
   if (img) { img.src = ''; img.style.display = 'none'; }
-  if (vid) { vid.pause(); vid.src = ''; vid.style.display = 'none'; }
   var prevList = wrap.querySelector('.arch-file-list');
   if (prevList) prevList.remove();
 
-  if (files.length === 1 && files[0].type.startsWith('image/') && img) {
+  if (files.length === 1 && img) {
     img.src = URL.createObjectURL(files[0]);
     img.style.display = 'block';
     wrap.style.display = 'block';
@@ -218,32 +191,78 @@ function _renderPreviewLista(files) {
   listDiv.className = 'arch-file-list';
   listDiv.style.cssText = 'margin-top:12px;max-height:150px;overflow-y:auto;border-radius:10px;border:1px solid var(--border);padding:0 10px';
   listDiv.innerHTML = files.map(function(f, i) {
-    var icon = f.type.startsWith('video/') ? '🎬' : '🖼';
-    var mb   = (f.size / 1024 / 1024).toFixed(1) + ' MB';
+    var mb     = (f.size / 1024 / 1024).toFixed(1) + ' MB';
     var border = i < files.length - 1 ? 'border-bottom:1px solid var(--ivory)' : '';
     return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;' + border + ';font-size:12px;color:var(--brown)">' +
-      '<span style="flex-shrink:0">' + icon + '</span>' +
+      '<span>🖼</span>' +
       '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _esc(f.name) + '</span>' +
-      '<span style="color:var(--brown-soft);flex-shrink:0;margin-left:8px">' + mb + '</span>' +
+      '<span style="color:var(--brown-soft);flex-shrink:0">' + mb + '</span>' +
     '</div>';
   }).join('');
-
   wrap.appendChild(listDiv);
   wrap.style.display = 'block';
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// UPLOAD — Firebase Storage con progreso real
+// COMPRESIÓN con Canvas
+// Devuelve { dataUrl, thumb } via callback(err, result)
+// ═══════════════════════════════════════════════════════════════════
+function _comprimirImagen(file, callback) {
+  var imgEl = new Image();
+  var url   = URL.createObjectURL(file);
+
+  imgEl.onload = function() {
+    URL.revokeObjectURL(url);
+
+    var w = imgEl.naturalWidth;
+    var h = imgEl.naturalHeight;
+
+    // Redimensionar manteniendo proporción
+    if (w > ARCH_MAX_WIDTH || h > ARCH_MAX_WIDTH) {
+      if (w >= h) { h = Math.round(h * ARCH_MAX_WIDTH / w); w = ARCH_MAX_WIDTH; }
+      else        { w = Math.round(w * ARCH_MAX_WIDTH / h); h = ARCH_MAX_WIDTH; }
+    }
+
+    // Canvas principal
+    var canvas = document.createElement('canvas');
+    canvas.width  = w;
+    canvas.height = h;
+    canvas.getContext('2d').drawImage(imgEl, 0, 0, w, h);
+    var dataUrl = canvas.toDataURL('image/jpeg', ARCH_QUALITY);
+
+    // Thumbnail para galería (300px)
+    var tw = 300, th = Math.round(h * 300 / w);
+    if (h > w) { th = 300; tw = Math.round(w * 300 / h); }
+    var tCanvas = document.createElement('canvas');
+    tCanvas.width  = tw;
+    tCanvas.height = th;
+    tCanvas.getContext('2d').drawImage(imgEl, 0, 0, tw, th);
+    var thumb = tCanvas.toDataURL('image/jpeg', 0.70);
+
+    var kbFull  = Math.round(dataUrl.length * 0.75 / 1024);
+    var kbThumb = Math.round(thumb.length * 0.75 / 1024);
+    console.log('[Archivos] Comprimido:', file.name,
+      '| Original:', (file.size/1024).toFixed(0)+'KB',
+      '| Full:', kbFull+'KB',
+      '| Thumb:', kbThumb+'KB');
+
+    callback(null, { dataUrl: dataUrl, thumb: thumb });
+  };
+
+  imgEl.onerror = function() {
+    URL.revokeObjectURL(url);
+    callback(new Error('No se pudo leer: ' + file.name));
+  };
+
+  imgEl.src = url;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// UPLOAD — comprime y guarda en Firebase DB
 // ═══════════════════════════════════════════════════════════════════
 function confirmarUpload() {
   if (!archPendingFiles.length || !fichaActualKey) {
-    console.warn('[Archivos] Nada que subir o no hay paciente activo.');
-    return;
-  }
-
-  var storage = _getStorage();
-  if (!storage) {
-    _showArchErr('Firebase Storage no disponible. Revisá la consola.');
+    console.warn('[Archivos] Nada que subir o sin paciente activo.');
     return;
   }
 
@@ -259,14 +278,13 @@ function confirmarUpload() {
   var errores = [];
   var idx     = 0;
 
-  function subirSiguiente() {
+  function procesarSiguiente() {
     if (idx >= total) {
-      // Todos procesados
+      // Fin
       _setProgress(100, subidos === total
-        ? '✓ ' + subidos + ' archivo' + (subidos !== 1 ? 's' : '') + ' subido' + (subidos !== 1 ? 's' : '') + ' correctamente'
+        ? '✓ ' + subidos + ' imagen' + (subidos !== 1 ? 'es' : '') + ' guardada' + (subidos !== 1 ? 's' : '') + ' correctamente'
         : '⚠ ' + subidos + ' OK · ' + errores.length + ' con error'
       );
-
       if (errores.length) {
         _showArchErr('Error en: ' + errores.join(', '));
         if (btn) { btn.disabled = false; btn.textContent = 'Reintentar'; }
@@ -280,61 +298,45 @@ function confirmarUpload() {
       return;
     }
 
-    var file    = archPendingFiles[idx];
-    var isImage = file.type.startsWith('image/');
-    var ext     = (file.name.split('.').pop() || 'bin').toLowerCase();
-    var path    = 'pacientes/' + fichaActualKey + '/' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+    var file = archPendingFiles[idx];
+    _setProgress(Math.round((idx / total) * 85), 'Comprimiendo ' + (idx + 1) + ' de ' + total + '…');
 
-    console.log('[Archivos] (' + (idx + 1) + '/' + total + ') Subiendo:', file.name, '→', path);
-
-    var fileRef    = storage.ref().child(path);
-    var uploadTask = fileRef.put(file, { contentType: file.type });
-
-    uploadTask.on('state_changed',
-      // Progreso real
-      function(snapshot) {
-        var filePct  = snapshot.bytesTransferred / snapshot.totalBytes;
-        var totalPct = Math.round(((idx + filePct) / total) * 90);
-        _setProgress(totalPct, 'Subiendo ' + (idx + 1) + ' de ' + total + '… (' + Math.round(filePct * 100) + '%)');
-      },
-      // Error en este archivo
-      function(err) {
-        console.error('[Archivos] ✗ Error storage "' + file.name + '":', err.code, err.message);
-        errores.push('"' + file.name + '" (' + (err.message || err.code) + ')');
+    _comprimirImagen(file, function(err, result) {
+      if (err) {
+        console.error('[Archivos] Error comprimiendo:', file.name, err);
+        errores.push('"' + file.name + '": ' + err.message);
         idx++;
-        subirSiguiente();
-      },
-      // Éxito en este archivo
-      function() {
-        uploadTask.snapshot.ref.getDownloadURL().then(function(url) {
-          console.log('[Archivos] ✓ Storage OK:', file.name, '| URL:', url);
-
-          return db.ref('pacientes/' + fichaActualKey + '/archivos').push({
-            url:       url,
-            tipo:      isImage ? 'image' : 'video',
-            categoria: cat,
-            notas:     notas,
-            fecha:     new Date().toISOString(),
-            eliminado: false
-          });
-        })
-        .then(function() {
-          console.log('[Archivos] ✓ DB OK:', file.name);
-          subidos++;
-          idx++;
-          subirSiguiente();
-        })
-        .catch(function(err) {
-          console.error('[Archivos] ✗ Error DB "' + file.name + '":', err);
-          errores.push('"' + file.name + '" (error al guardar registro)');
-          idx++;
-          subirSiguiente();
-        });
+        procesarSiguiente();
+        return;
       }
-    );
+
+      _setProgress(Math.round(((idx + 0.5) / total) * 85), 'Guardando ' + (idx + 1) + ' de ' + total + '…');
+
+      db.ref('pacientes/' + fichaActualKey + '/archivos').push({
+        dataUrl:   result.dataUrl,
+        thumb:     result.thumb,
+        categoria: cat,
+        notas:     notas,
+        nombre:    file.name,
+        fecha:     new Date().toISOString(),
+        eliminado: false
+      })
+      .then(function() {
+        console.log('[Archivos] ✓ Guardado en DB:', file.name);
+        subidos++;
+        idx++;
+        procesarSiguiente();
+      })
+      .catch(function(dbErr) {
+        console.error('[Archivos] ✗ Error DB:', file.name, dbErr);
+        errores.push('"' + file.name + '": error al guardar');
+        idx++;
+        procesarSiguiente();
+      });
+    });
   }
 
-  subirSiguiente();
+  procesarSiguiente();
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -357,10 +359,11 @@ function abrirModalArchivoView(id) {
   var img = document.getElementById('mav-img');
   var vid = document.getElementById('mav-vid');
   img.style.display = 'none'; img.src = '';
-  vid.style.display = 'none'; vid.pause(); vid.src = '';
+  if (vid) { vid.style.display = 'none'; vid.pause(); vid.src = ''; }
 
-  if (f.tipo === 'video') { vid.src = f.url; vid.style.display = 'block'; }
-  else                    { img.src = f.url; img.style.display = 'block'; }
+  // Mostrar imagen en alta resolución
+  img.src = f.dataUrl || f.thumb || '';
+  img.style.display = 'block';
 
   var notasEl = document.getElementById('mav-notas');
   if (notasEl) {
@@ -380,8 +383,6 @@ function cerrarModalArchivoView(e) {
 function _cerrarModalArch() {
   var overlay = document.getElementById('modal-arch-view');
   if (overlay) overlay.style.display = 'none';
-  var vid = document.getElementById('mav-vid');
-  if (vid) { vid.pause(); vid.src = ''; }
   document.body.style.overflow = '';
   archArchivoActual = null;
 }
@@ -391,28 +392,25 @@ function _cerrarModalArch() {
 // ═══════════════════════════════════════════════════════════════════
 function eliminarArchivoActual() {
   if (!archArchivoActual) return;
-  if (!confirm('¿Eliminar este archivo? No se puede deshacer.')) return;
+  if (!confirm('¿Eliminar esta imagen? No se puede deshacer.')) return;
 
   var id = archArchivoActual.id;
   db.ref('pacientes/' + fichaActualKey + '/archivos/' + id)
-    .update({ eliminado: true })
+    .update({ eliminado: true, dataUrl: null, thumb: null }) // liberar espacio en DB
     .then(function() {
-      console.log('[Archivos] Archivo eliminado (soft delete):', id);
+      console.log('[Archivos] Eliminado:', id);
       _cerrarModalArch();
       cargarArchivos(fichaActualKey);
     })
-    .catch(function(err) {
-      alert('Error al eliminar: ' + (err.message || ''));
-    });
+    .catch(function(err) { alert('Error al eliminar: ' + (err.message || '')); });
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// DRAG & DROP — pasa FileList completa a onArchivoSeleccionado
+// DRAG & DROP
 // ═══════════════════════════════════════════════════════════════════
 function _initDragDrop() {
   var zone = document.getElementById('arch-drop-zone');
   if (!zone) return;
-
   ['dragenter', 'dragover'].forEach(function(ev) {
     zone.addEventListener(ev, function(e) { e.preventDefault(); zone.classList.add('over'); });
   });
@@ -423,74 +421,6 @@ function _initDragDrop() {
     var files = e.dataTransfer && e.dataTransfer.files;
     if (files && files.length) onArchivoSeleccionado({ files: files });
   });
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// LAZY LOAD
-// ═══════════════════════════════════════════════════════════════════
-function _initLazyLoad() {
-  if (_archLazyObserver) { _archLazyObserver.disconnect(); _archLazyObserver = null; }
-
-  var targets = document.querySelectorAll('#lista-archivos [data-src]');
-  if (!targets.length) return;
-
-  if (!('IntersectionObserver' in window)) {
-    targets.forEach(function(el) { el.src = el.dataset.src; delete el.dataset.src; });
-    return;
-  }
-
-  _archLazyObserver = new IntersectionObserver(function(entries) {
-    entries.forEach(function(entry) {
-      if (entry.isIntersecting) {
-        var el = entry.target;
-        if (el.dataset.src) { el.src = el.dataset.src; delete el.dataset.src; }
-        _archLazyObserver.unobserve(el);
-      }
-    });
-  }, { rootMargin: '120px' });
-
-  targets.forEach(function(el) { _archLazyObserver.observe(el); });
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// DEBUG — ejecutar desde consola del browser: debugArchivos()
-// ═══════════════════════════════════════════════════════════════════
-function debugArchivos() {
-  console.log('══════════════════════════════');
-  console.log('DEBUG ARCHIVOS');
-  console.log('══════════════════════════════');
-  console.log('Firebase disponible:', typeof firebase !== 'undefined');
-  console.log('Firebase apps:', typeof firebase !== 'undefined' && firebase.apps ? firebase.apps.length : 'N/A');
-
-  var storage = _getStorage();
-  console.log('Storage disponible:', !!storage);
-
-  if (storage) {
-    console.log('Bucket:', storage.app.options.storageBucket);
-
-    // Test: subir archivo texto de prueba
-    var blob     = new Blob(['test'], { type: 'text/plain' });
-    var testPath = '_debug_test_' + Date.now() + '.txt';
-    var testRef  = storage.ref().child(testPath);
-
-    console.log('Test de upload a:', testPath);
-    testRef.put(blob).then(function() {
-      return testRef.getDownloadURL();
-    }).then(function(url) {
-      console.log('✅ Storage funciona correctamente. URL de prueba:', url);
-      testRef.delete();
-    }).catch(function(err) {
-      console.error('❌ Error en Storage:', err.code, err.message);
-      if (err.code === 'storage/unauthorized') {
-        console.error('   → Actualizá las reglas en Firebase Console → Storage → Rules:');
-        console.error('     allow read, write: if true;');
-      }
-    });
-  }
-
-  console.log('Paciente activo (fichaActualKey):', typeof fichaActualKey !== 'undefined' ? fichaActualKey : '(ninguno)');
-  console.log('Archivos cargados:', archivosData.length);
-  console.log('══════════════════════════════');
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -507,61 +437,45 @@ function _setProgress(pct, txt) {
 
 function _resetFormArchivo() {
   archPendingFiles = [];
-
   var fi = document.getElementById('arch-file-input');
   if (fi) fi.value = '';
-
   var img  = document.getElementById('arch-preview-img');
-  var vid  = document.getElementById('arch-preview-vid');
   var wrap = document.getElementById('arch-preview-wrap');
   if (img)  { img.src = ''; img.style.display = 'none'; }
-  if (vid)  { vid.pause(); vid.src = ''; vid.style.display = 'none'; }
   if (wrap) {
     var prevList = wrap.querySelector('.arch-file-list');
     if (prevList) prevList.remove();
     wrap.style.display = 'none';
   }
-
   var progWrap = document.getElementById('arch-progress-wrap');
   var progBar  = document.getElementById('arch-progress-bar');
   var progTxt  = document.getElementById('arch-progress-txt');
   if (progWrap) progWrap.style.display = 'none';
   if (progBar)  progBar.style.width = '0';
   if (progTxt)  progTxt.textContent = 'Subiendo…';
-
   var btnUp = document.getElementById('btn-confirmar-upload');
-  if (btnUp) { btnUp.disabled = true; btnUp.textContent = 'Subir archivo'; }
-
+  if (btnUp) { btnUp.disabled = true; btnUp.textContent = 'Subir imagen'; }
   var cat   = document.getElementById('arch-categoria');
   var notas = document.getElementById('arch-notas');
   if (cat)   cat.value   = 'tratamiento';
   if (notas) notas.value = '';
-
   var dropText = document.querySelector('#arch-drop-zone .arch-drop-text');
   if (dropText) dropText.textContent = 'Tocá o arrastrá aquí';
-
   _showArchErr(null);
 }
 
 function _limpiarModuloArchivos() {
-  archivosData      = [];
-  filtroArchivos    = 'todos';
-  archArchivoActual = null;
-  formArchivoVisible = false;
-
+  archivosData = []; filtroArchivos = 'todos';
+  archArchivoActual = null; formArchivoVisible = false;
   var lista = document.getElementById('lista-archivos');
   if (lista) lista.innerHTML = '<div class="empty"><div class="empty-icon">📸</div>Sin archivos aún</div>';
-
   var form = document.getElementById('form-archivo');
   if (form) form.className = 'form-card';
-
   var btnSubir = document.getElementById('btn-subir-archivo');
   if (btnSubir) { btnSubir.textContent = '+ Subir'; btnSubir.className = 'btn-primary'; }
-
   document.querySelectorAll('.arch-filtro-btn').forEach(function(b, i) {
     b.classList.toggle('sel', i === 0);
   });
-
   if (_archLazyObserver) { _archLazyObserver.disconnect(); _archLazyObserver = null; }
   _resetFormArchivo();
 }
@@ -574,7 +488,10 @@ function _showArchErr(msg) {
 }
 
 function _esc(str) {
-  return (str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  if (!str) return '';
+  // Para dataUrls no escapamos (son seguras), solo para strings externos
+  if (str.startsWith('data:')) return str;
+  return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 // ── Auto-init ─────────────────────────────────────────────────────

@@ -1442,7 +1442,7 @@ body.menu-open{ overflow:hidden; }
             <div class="form-icon">📸</div>
             <div>
               <div class="form-title">Subir archivo</div>
-              <div class="form-sub">Imágenes hasta 10 MB · Videos hasta 50 MB</div>
+              <div class="form-sub">Imágenes hasta 10 MB · JPG · PNG · HEIC</div>
             </div>
           </div>
 
@@ -1450,13 +1450,13 @@ body.menu-open{ overflow:hidden; }
           <div class="arch-drop-zone" id="arch-drop-zone" onclick="document.getElementById('arch-file-input').click()">
             <div class="arch-drop-icon">📁</div>
             <div class="arch-drop-text">Tocá o arrastrá aquí</div>
-            <div class="arch-drop-sub">JPG · PNG · HEIC · MP4 · MOV</div>
+            <div class="arch-drop-sub">JPG · PNG · HEIC · hasta 10 MB c/u</div>
             <div id="arch-preview-wrap" style="display:none">
               <img id="arch-preview-img" style="display:none" alt="preview"/>
               <video id="arch-preview-vid" style="display:none" controls muted playsinline></video>
             </div>
           </div>
-          <input type="file" id="arch-file-input" accept="image/*,video/*" multiple style="display:none" onchange="onArchivoSeleccionado(this)"/>
+          <input type="file" id="arch-file-input" accept="image/*" multiple style="display:none" onchange="onArchivoSeleccionado(this)"/>
 
           <div class="field" style="margin-top:14px">
             <label>Categoría</label>
