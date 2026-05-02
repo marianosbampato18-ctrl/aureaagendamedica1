@@ -5,7 +5,9 @@ function abrirModalEdit(turnoKey) {
   turnoEditKey = turnoKey;
   var t = turnosData[turnoKey];
   if (!t) return;
-  document.getElementById('edit-pac-sub').textContent = (t.paciente||'') + ' · ' + (t.tratamiento||'');
+  var pacEdit = t.pacienteKey && pacientesData[t.pacienteKey];
+  var idEdit = (pacEdit && pacEdit.pacienteId) ? '  #'+pacEdit.pacienteId : '';
+  document.getElementById('edit-pac-sub').textContent = (t.paciente||'') + idEdit + ' · ' + (t.tratamiento||'');
 
   // Tab paciente
   if (t.pacienteKey && pacientesData[t.pacienteKey]) {

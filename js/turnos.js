@@ -1,24 +1,74 @@
 // ═══════════════════════════════════════════
 // TURNOS — CRUD y render de turnos
 // ═══════════════════════════════════════════
-function guardarTurno() {
-  // Tratamiento: viene del select o del input libre
+// ── Múltiples tratamientos (formulario nuevo turno) ──
+function agregarTratamientoForm() {
   var tratSelKey = document.getElementById('t-trat-sel').value;
-  var trat = '';
-  var precio = 0;
+  var nombre = '', precio = 0, key = '';
   if (tratSelKey === '__libre__') {
-    trat = document.getElementById('t-trat').value.trim();
+    nombre = (document.getElementById('t-trat').value || '').trim();
     precio = precioActualTurno || 0;
-  } else if (tratSelKey) {
+    key = '__libre__';
+    if (!nombre) { alert('Ingresá el nombre del tratamiento libre.'); return; }
+  } else if (tratSelKey && tratamientosData[tratSelKey]) {
     var tr = tratamientosData[tratSelKey];
-    if (tr) { trat = tr.nombre; precio = parseFloat(tr.precio)||0; }
+    nombre = tr.nombre; precio = parseFloat(tr.precio) || 0; key = tratSelKey;
+  } else {
+    alert('Seleccioná un tratamiento del listado.'); return;
   }
+  listaTratamientosForm.push({ nombre: nombre, precio: precio, key: key });
+  document.getElementById('t-trat-sel').value = '';
+  document.getElementById('t-trat-libre-wrap').style.display = 'none';
+  document.getElementById('t-precio-auto').className = 'precio-auto';
+  precioActualTurno = 0;
+  renderListaTratsForm();
+}
+
+function eliminarTratForm(idx) {
+  listaTratamientosForm.splice(idx, 1);
+  renderListaTratsForm();
+}
+
+function renderListaTratsForm() {
+  var lista = document.getElementById('lista-trats-form');
+  var totalEl = document.getElementById('t-total-display');
+  if (!lista) return;
+  if (!listaTratamientosForm.length) {
+    lista.innerHTML = '';
+    if (totalEl) totalEl.style.display = 'none';
+    precioActualTurno = 0;
+    return;
+  }
+  var total = listaTratamientosForm.reduce(function(s, t) { return s + t.precio; }, 0);
+  lista.innerHTML = listaTratamientosForm.map(function(t, i) {
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--ivory);border:1px solid var(--border);border-radius:10px;margin-bottom:6px">' +
+      '<div><div style="font-size:14px;font-weight:600;color:var(--brown)">' + sanitize(t.nombre) + '</div>' +
+      (t.precio > 0 ? '<div style="font-size:12px;color:var(--gold-dark)">$' + t.precio.toLocaleString('es-AR') + '</div>' : '') + '</div>' +
+      '<button type="button" onclick="eliminarTratForm(' + i + ')" style="background:none;border:none;font-size:16px;color:var(--brown-soft);cursor:pointer;padding:4px 8px">✕</button>' +
+    '</div>';
+  }).join('');
+  if (totalEl) {
+    totalEl.textContent = listaTratamientosForm.length > 1 ? 'Total: $' + total.toLocaleString('es-AR') : '';
+    totalEl.style.display = listaTratamientosForm.length > 1 ? 'block' : 'none';
+  }
+  precioActualTurno = total;
+  if (pagoAntTipo === 'total' && document.getElementById('pa-monto')) {
+    document.getElementById('pa-monto').value = total;
+  }
+}
+
+function guardarTurno() {
   var fecha = document.getElementById('t-fecha').value;
   var hh    = document.getElementById('t-hh').value;
   var mm    = document.getElementById('t-mm').value;
   var hora  = (hh && mm) ? hh+':'+mm : '';
   var err   = document.getElementById('t-err');
   limpiarError(err);
+
+  // Tratamiento: viene de la lista acumulada
+  if (!listaTratamientosForm.length) { mostrarErrorValidacion(err, 'Agregá al menos un tratamiento.'); return; }
+  var trat   = listaTratamientosForm.map(function(t){ return t.nombre; }).join(' + ');
+  var precio = listaTratamientosForm.reduce(function(s, t){ return s + t.precio; }, 0);
 
   // Validaciones mejoradas
   var errFecha = validarFecha(fecha);
@@ -27,7 +77,6 @@ function guardarTurno() {
   if (errHora)  { mostrarErrorValidacion(err, errHora);  return; }
 
   if (pvSeleccion === null) { mostrarErrorValidacion(err, 'Indicá si es primera vez o ya fue antes.'); return; }
-  if (!trat)  { mostrarErrorValidacion(err, 'Seleccioná un tratamiento.'); return; }
   if (!fecha) { mostrarErrorValidacion(err, 'La fecha es obligatoria.'); return; }
   if (!hora)  { mostrarErrorValidacion(err, 'La hora es obligatoria.'); return; }
 
@@ -92,7 +141,8 @@ function guardarTurno() {
   promesaFicha.then(function(pacKey) {
     return db.ref('turnos').push({
       paciente: nomPac, pacienteKey: pacKey,
-      tratamiento: trat, tratamientoKey: (tratSelKey && tratSelKey!=='__libre__') ? tratSelKey : '',
+      tratamiento: trat,
+      tratamientos: listaTratamientosForm.slice(),
       precio: precio,
       telefono: telPac, dni: dniPac,
       primeraVez: pvSeleccion, fecha: fecha, hora: hora,
@@ -187,11 +237,26 @@ function cardTurnoHTML(key, t) {
     lineaPrecio = '<div class="card-meta" style="margin-top:3px">💎 $'+precio.toLocaleString('es-AR')+(resta>0&&pagado>0?' · adeuda $'+resta.toLocaleString('es-AR'):'')+'</div>';
   }
 
+  // ID del paciente
+  var pac = t.pacienteKey && pacientesData[t.pacienteKey];
+  var idBadge = (pac && pac.pacienteId)
+    ? '<span style="font-size:9px;font-weight:700;color:var(--gold-dark);background:#FDF8EE;border:1px solid var(--gold);border-radius:20px;padding:2px 7px;margin-left:6px;vertical-align:middle">#'+pac.pacienteId+'</span>'
+    : '';
+
+  // Tratamientos: lista o texto simple (backward compat)
+  var tratsHtml = '';
+  if (t.tratamientos && t.tratamientos.length) {
+    tratsHtml = t.tratamientos.map(function(tr){ return '<div class="trat-nombre" style="margin-top:2px">'+sanitize(tr.nombre)+'</div>'; }).join('');
+    tratsHtml = tratsHtml.replace('</div>', pagoBadge + '</div>'); // badge solo en el primero
+  } else {
+    tratsHtml = '<div class="trat-nombre">'+sanitize(t.tratamiento)+pagoBadge+'</div>';
+  }
+
   return '<div class="card '+t.estado+'">' +
     '<div class="date-block"><div class="date-day">'+p.d+'</div><div class="date-mon">'+MESES[p.m]+'</div></div>' +
     '<div class="card-body"><div class="card-top"><div>' +
-      (t.paciente?'<div class="pac-nombre">'+sanitize(t.paciente)+'</div>':'') +
-      '<div class="trat-nombre">'+sanitize(t.tratamiento)+pagoBadge+'</div>' +
+      (t.paciente?'<div class="pac-nombre">'+sanitize(t.paciente)+idBadge+'</div>':'') +
+      tratsHtml +
     '</div><span class="'+badgeCls+'">'+badgeTxt+'</span></div>' +
     '<div class="card-meta">◷ '+t.hora+' hs'+(t.telefono?'  ·  📞 '+sanitize(t.telefono):'')+'</div>' +
     (t.dni?'<div class="card-meta" style="margin-top:3px">🪪 DNI '+t.dni+'</div>':'') +

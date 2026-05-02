@@ -39,6 +39,8 @@ var turnoEditKey = null;
 var editTabActual = 'paciente';
 // COBRO MANUAL (paciente seleccionado)
 var cmPacienteKey = null;
+// MÚLTIPLES TRATAMIENTOS por turno (formulario nuevo turno)
+var listaTratamientosForm = [];
 
 var ADMINS = ['marianosbampato18@gmail.com'];
 

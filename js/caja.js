@@ -28,7 +28,9 @@ function abrirModalCobro(turnoKey) {
   turnoCobroKey = turnoKey;
   var t = turnosData[turnoKey];
   filasCobroPago = [];
-  document.getElementById('cobro-pac-sub').textContent = (t.paciente||'') + ' · ' + t.tratamiento;
+  var pacCobro = t.pacienteKey && pacientesData[t.pacienteKey];
+  var idCobro = (pacCobro && pacCobro.pacienteId) ? '  #'+pacCobro.pacienteId : '';
+  document.getElementById('cobro-pac-sub').textContent = (t.paciente||'') + idCobro + ' · ' + t.tratamiento;
 
   var precioTotal = parseFloat(t.precio) || 0;
   var v = buscarVentaDeTurno(turnoKey);
@@ -586,8 +588,9 @@ function buscarPaciente(query) {
   box.innerHTML = keys.map(function(k) {
     var p = pacientesData[k];
     var histCount = p.historial ? Object.keys(p.historial).length : 0;
+    var idStr = p.pacienteId ? ' · #'+p.pacienteId : '';
     return '<div class="suggestion-item" onclick="seleccionarPaciente(\''+k+'\')">' +
-      '<div class="suggestion-name">'+p.nombre+'</div>' +
+      '<div class="suggestion-name">'+p.nombre+'<span style="font-size:10px;color:var(--gold-dark);font-weight:600">'+idStr+'</span></div>' +
       '<div class="suggestion-sub">'+(p.telefono||'')+(p.dni?' · DNI '+p.dni:'')+'&nbsp;&nbsp;'+histCount+' visita'+(histCount!==1?'s':'')+'</div>' +
     '</div>';
   }).join('');
@@ -600,8 +603,8 @@ function seleccionarPaciente(key) {
   var histCount = p.historial ? Object.keys(p.historial).length : 0;
   document.getElementById('t-pac-buscar').value = p.nombre;
   document.getElementById('suggestions').className = 'suggestions';
-  document.getElementById('fc-nombre').textContent = p.nombre;
-  document.getElementById('fc-data').textContent = (p.telefono ? '📞 '+p.telefono : '') + (p.dni ? '  ·  🪪 DNI '+p.dni : '');
+  document.getElementById('fc-nombre').textContent = p.nombre + (p.pacienteId ? '  #'+p.pacienteId : '');
+  document.getElementById('fc-data').textContent = (p.telefono ? '📞 '+p.telefono : '') + (p.dni ? '  ·  🪪 DNI '+p.dni : '') + (p.email ? '  ·  ✉ '+p.email : '');
   document.getElementById('fc-hist').textContent = histCount + ' visita'+(histCount!==1?'s anteriores':'anterior');
   document.getElementById('ficha-cargada').className = 'ficha-cargada visible';
 }
@@ -633,6 +636,9 @@ function limpiarFormTurno() {
   pvSeleccion = null; pacienteSeleccionadoKey = null;
   document.getElementById('pv-si').className = 'toggle-btn';
   document.getElementById('pv-no').className = 'toggle-btn';
+  // Reset tratamientos
+  listaTratamientosForm = [];
+  renderListaTratsForm();
   // Reset pago anticipado
   setPagoAnt('no');
   setPagoAntMet('efectivo');
