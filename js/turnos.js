@@ -3,19 +3,21 @@
 // ═══════════════════════════════════════════
 // ── Múltiples tratamientos (formulario nuevo turno) ──
 function agregarTratamientoForm() {
+  var err = document.getElementById('t-err');
   var tratSelKey = document.getElementById('t-trat-sel').value;
   var nombre = '', precio = 0, key = '';
   if (tratSelKey === '__libre__') {
     nombre = (document.getElementById('t-trat').value || '').trim();
     precio = precioActualTurno || 0;
     key = '__libre__';
-    if (!nombre) { alert('Ingresá el nombre del tratamiento libre.'); return; }
+    if (!nombre) { mostrarErrorValidacion(err, 'Ingresá el nombre del tratamiento libre.'); return; }
   } else if (tratSelKey && tratamientosData[tratSelKey]) {
     var tr = tratamientosData[tratSelKey];
     nombre = tr.nombre; precio = parseFloat(tr.precio) || 0; key = tratSelKey;
   } else {
-    alert('Seleccioná un tratamiento del listado.'); return;
+    mostrarErrorValidacion(err, 'Seleccioná un tratamiento del listado antes de agregar.'); return;
   }
+  limpiarError(err);
   listaTratamientosForm.push({ nombre: nombre, precio: precio, key: key });
   document.getElementById('t-trat-sel').value = '';
   document.getElementById('t-trat-libre-wrap').style.display = 'none';
