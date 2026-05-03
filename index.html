@@ -74,7 +74,7 @@ body{font-family:var(--font-body);-webkit-font-smoothing:antialiased;background:
 .metric-value{font-size:26px;font-weight:700;color:var(--white);line-height:1}
 .metric-label{font-family:var(--font-display);font-size:9px;font-weight:500;color:var(--gold-light);margin-top:6px;letter-spacing:.32em;text-transform:uppercase;opacity:.9}
 .metric-sep{width:1px;height:36px;background:rgba(184,154,106,.4);flex-shrink:0}
-.nav-tabs{display:flex;position:relative;z-index:1;margin-top:18px}
+.nav-tabs{display:none !important}
 .nav-tab{flex:1;text-align:center;padding:12px 0;font-family:var(--font-display);font-size:10px;font-weight:500;color:rgba(255,255,255,.45);letter-spacing:.24em;text-transform:uppercase;cursor:pointer;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;-webkit-tap-highlight-color:transparent}
 .nav-tab.active{color:var(--gold-light);border-bottom-color:var(--gold)}
 .container{max-width:480px;margin:0 auto;padding:20px 18px 60px}
@@ -781,9 +781,8 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
   flex:1;
 }
 
-/* Responsive: ocultar tabs en mobile, mostrar hamburguesa */
+/* Responsive: mostrar hamburguesa en mobile */
 @media (max-width:767px){
-  .nav-tabs{ display:none !important; }
   .hamburger-btn{ display:inline-flex; }
 }
 @media (min-width:768px){
@@ -972,8 +971,6 @@ body.menu-open{ overflow:hidden; }
   .aurea-sidebar{ display:flex; }
   /* El contenido se corre a la derecha para dejar lugar al sidebar */
   #app-screen{ padding-left:232px; }
-  /* Tabs antiguos — siempre ocultos: el sidebar reemplaza la navegación */
-  .nav-tabs{ display:none !important; }
   /* Branding del hero queda redundante con el sidebar — simplificamos */
   .hero-brand .brand-monogram-sm{ display:none; }
   .hero-brand-text .hero-eyebrow{ display:none; }
@@ -1097,7 +1094,7 @@ body.menu-open{ overflow:hidden; }
   <div class="login-field"><input type="password" id="login-pass" placeholder="Contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')loginEmail()"/></div>
   <div class="login-err" id="login-err"></div>
   <br/>
-  <button class="btn-ingresar" onclick="loginEmail()">Ingresar</button>
+  <button type="button" class="btn-ingresar" onclick="loginEmail()">Ingresar</button>
   <div class="login-note">Acceso restringido a usuarios autorizados</div>
 </div>
 
@@ -1117,7 +1114,7 @@ body.menu-open{ overflow:hidden; }
     <ul class="aurea-sidebar-nav" id="aurea-sidebar-nav" role="menu"></ul>
     <div class="aurea-sidebar-footer">
       <div class="aurea-sidebar-user" id="aurea-sidebar-user"></div>
-      <button class="aurea-sidebar-logout" type="button" onclick="logout()">Salir</button>
+      <button type="button" class="aurea-sidebar-logout" type="button" onclick="logout()">Salir</button>
     </div>
   </aside>
 
@@ -1152,7 +1149,7 @@ body.menu-open{ overflow:hidden; }
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
-        <button class="btn-logout" onclick="logout()">Salir</button>
+        <button type="button" class="btn-logout" onclick="logout()">Salir</button>
         <button class="hamburger-btn" id="menu-toggle" type="button"
                 aria-label="Abrir menú" aria-haspopup="true" aria-expanded="false" aria-controls="menu-panel">
           <span class="ham-lines"><span></span><span></span><span></span></span>
@@ -1185,7 +1182,7 @@ body.menu-open{ overflow:hidden; }
     <!-- PANEL AGENDA -->
     <div class="panel active" id="panel-agenda">
       <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
-        <button class="btn-primary" id="btn-nuevo-turno" onclick="toggleFormTurno()">+ Nuevo turno</button>
+        <button type="button" class="btn-primary" id="btn-nuevo-turno" onclick="toggleFormTurno()">+ Nuevo turno</button>
       </div>
 
       <div class="form-card" id="form-turno">
@@ -1292,7 +1289,7 @@ body.menu-open{ overflow:hidden; }
         </div>
 
         <div class="err" id="t-err"></div>
-        <button class="btn-save" id="btn-save-turno" onclick="guardarTurno()">Guardar turno</button>
+        <button type="button" class="btn-save" id="btn-save-turno" onclick="guardarTurno()">Guardar turno</button>
       </div>
 
       <div id="lista-turnos"><div class="empty"><div class="empty-icon">✦</div>Cargando…</div></div>
@@ -1304,15 +1301,15 @@ body.menu-open{ overflow:hidden; }
         <!-- Toolbar -->
         <div class="cal-toolbar">
           <div class="cal-nav">
-            <button class="cal-nav-btn" onclick="calNav(-1)">‹</button>
+            <button type="button" class="cal-nav-btn" onclick="calNav(-1)">‹</button>
             <div class="cal-date-title" id="cal-title">Cargando…</div>
-            <button class="cal-nav-btn" onclick="calNav(1)">›</button>
+            <button type="button" class="cal-nav-btn" onclick="calNav(1)">›</button>
           </div>
-          <button class="cal-today-btn" onclick="calGoToday()">Hoy</button>
+          <button type="button" class="cal-today-btn" onclick="calGoToday()">Hoy</button>
           <div class="cal-view-toggle">
-            <button class="cal-view-btn" id="cal-btn-dia" onclick="calSetView('dia')">Día</button>
-            <button class="cal-view-btn" id="cal-btn-sem" onclick="calSetView('semana')">Semana</button>
-            <button class="cal-view-btn active" id="cal-btn-mes" onclick="calSetView('mes')">Mes</button>
+            <button type="button" class="cal-view-btn" id="cal-btn-dia" onclick="calSetView('dia')">Día</button>
+            <button type="button" class="cal-view-btn" id="cal-btn-sem" onclick="calSetView('semana')">Semana</button>
+            <button type="button" class="cal-view-btn active" id="cal-btn-mes" onclick="calSetView('mes')">Mes</button>
           </div>
         </div>
         <!-- Cabecera días (día/semana) -->
@@ -1350,7 +1347,7 @@ body.menu-open{ overflow:hidden; }
     <div class="panel" id="panel-fichas">
       <div id="fichas-lista">
         <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
-          <button class="btn-primary" id="btn-nuevo-pac" onclick="toggleFormPac()">+ Nueva historia clínica</button>
+          <button type="button" class="btn-primary" id="btn-nuevo-pac" onclick="toggleFormPac()">+ Nueva historia clínica</button>
         </div>
         <div class="form-card" id="form-pac">
           <div class="form-header"><div class="form-icon">👤</div><div><div class="form-title">Nueva historia clínica manual</div><div class="form-sub">Completá los datos del paciente</div></div></div>
@@ -1362,7 +1359,7 @@ body.menu-open{ overflow:hidden; }
           <div class="field"><label>Email</label><input type="email" id="p-mail" placeholder="ana@ejemplo.com" autocomplete="email" inputmode="email"/></div>
           <div class="field"><label>Notas generales</label><textarea id="p-notas" placeholder="Alergias, condiciones, observaciones..."></textarea></div>
           <div class="err" id="p-err"></div>
-          <button class="btn-save" id="btn-save-pac" onclick="guardarPaciente()">Guardar historia clínica</button>
+          <button type="button" class="btn-save" id="btn-save-pac" onclick="guardarPaciente()">Guardar historia clínica</button>
         </div>
         <div class="section-label">Pacientes</div>
         <div style="position:relative;margin-bottom:12px">
@@ -1372,7 +1369,7 @@ body.menu-open{ overflow:hidden; }
       </div>
 
       <div id="ficha-detalle">
-        <button class="back-btn" onclick="cerrarFicha()">← Volver a historias clínicas</button>
+        <button type="button" class="back-btn" onclick="cerrarFicha()">← Volver a historias clínicas</button>
         <div class="ficha-header">
           <div style="display:flex;align-items:center;gap:10px">
             <div class="ficha-nombre" id="fd-nombre"></div>
@@ -1387,7 +1384,7 @@ body.menu-open{ overflow:hidden; }
         <!-- ── TRATAMIENTOS DEL PACIENTE ── -->
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;margin-top:4px">
           <div class="section-label" style="margin:0;flex:1">💊 Tratamientos activos</div>
-          <button class="btn-primary" id="btn-nuevo-trat-pac" onclick="toggleFormTratPac()" style="margin-left:12px;font-size:12px;padding:7px 14px">+ Agregar</button>
+          <button type="button" class="btn-primary" id="btn-nuevo-trat-pac" onclick="toggleFormTratPac()" style="margin-left:12px;font-size:12px;padding:7px 14px">+ Agregar</button>
         </div>
         <div class="form-card form-trat-pac" id="form-trat-pac">
           <div class="form-header"><div class="form-icon">💊</div><div><div class="form-title" id="form-trat-pac-titulo">Nuevo tratamiento</div><div class="form-sub">Asociá un tratamiento a este paciente</div></div></div>
@@ -1398,7 +1395,7 @@ body.menu-open{ overflow:hidden; }
           </div>
           <div class="field"><label>Notas</label><textarea id="tp-notas" placeholder="Observaciones, dosis, indicaciones..."></textarea></div>
           <div class="err" id="tp-err"></div>
-          <button class="btn-save" id="btn-save-trat-pac" onclick="guardarTratPac()">Guardar tratamiento</button>
+          <button type="button" class="btn-save" id="btn-save-trat-pac" onclick="guardarTratPac()">Guardar tratamiento</button>
           <input type="hidden" id="tp-edit-key"/>
         </div>
         <div id="lista-trat-pac"><div class="empty"><div class="empty-icon">💊</div>Sin tratamientos asociados</div></div>
@@ -1406,7 +1403,7 @@ body.menu-open{ overflow:hidden; }
         <!-- ── HISTORIAL CLÍNICO ── -->
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;margin-top:20px">
           <div class="section-label" style="margin:0;flex:1">Historial clínico</div>
-          <button class="btn-primary" id="btn-nuevo-hist" onclick="toggleFormHist()" style="margin-left:12px;font-size:12px;padding:7px 14px">+ Agregar</button>
+          <button type="button" class="btn-primary" id="btn-nuevo-hist" onclick="toggleFormHist()" style="margin-left:12px;font-size:12px;padding:7px 14px">+ Agregar</button>
         </div>
         <div class="form-card" id="form-hist">
           <div class="form-header"><div class="form-icon">📋</div><div><div class="form-title">Nueva entrada</div><div class="form-sub">Registrá la consulta</div></div></div>
@@ -1415,22 +1412,22 @@ body.menu-open{ overflow:hidden; }
           <div class="field"><label>Productos / materiales usados</label><textarea id="h-prod" placeholder="Ej: Botox 20U, Juvederm 1ml..."></textarea></div>
           <div class="field"><label>Notas clínicas privadas</label><textarea id="h-nota" placeholder="Observaciones, reacciones, indicaciones..."></textarea></div>
           <div class="err" id="h-err"></div>
-          <button class="btn-save" id="btn-save-hist" onclick="guardarHistorial()">Guardar entrada</button>
+          <button type="button" class="btn-save" id="btn-save-hist" onclick="guardarHistorial()">Guardar entrada</button>
         </div>
         <div id="lista-historial"><div class="empty"><div class="empty-icon">📋</div>Sin entradas aún</div></div>
 
         <!-- ── ARCHIVOS CLÍNICOS ── -->
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;margin-top:24px">
           <div class="section-label" style="margin:0;flex:1">📸 Archivos clínicos</div>
-          <button class="btn-primary" id="btn-subir-archivo" onclick="toggleFormArchivo()" style="margin-left:12px;font-size:12px;padding:7px 14px">+ Subir</button>
+          <button type="button" class="btn-primary" id="btn-subir-archivo" onclick="toggleFormArchivo()" style="margin-left:12px;font-size:12px;padding:7px 14px">+ Subir</button>
         </div>
 
         <!-- Filtros -->
         <div class="arch-filtros" id="arch-filtros">
-          <button class="arch-filtro-btn sel" onclick="setFiltroArchivos(this,'todos')">Todos</button>
-          <button class="arch-filtro-btn" onclick="setFiltroArchivos(this,'antes')">Antes</button>
-          <button class="arch-filtro-btn" onclick="setFiltroArchivos(this,'despues')">Después</button>
-          <button class="arch-filtro-btn" onclick="setFiltroArchivos(this,'tratamiento')">Tratamiento</button>
+          <button type="button" class="arch-filtro-btn sel" onclick="setFiltroArchivos(this,'todos')">Todos</button>
+          <button type="button" class="arch-filtro-btn" onclick="setFiltroArchivos(this,'antes')">Antes</button>
+          <button type="button" class="arch-filtro-btn" onclick="setFiltroArchivos(this,'despues')">Después</button>
+          <button type="button" class="arch-filtro-btn" onclick="setFiltroArchivos(this,'tratamiento')">Tratamiento</button>
         </div>
 
         <!-- Formulario upload -->
@@ -1475,7 +1472,7 @@ body.menu-open{ overflow:hidden; }
           </div>
 
           <div class="err" id="arch-err"></div>
-          <button class="btn-save" id="btn-confirmar-upload" onclick="confirmarUpload()" disabled>Subir archivo</button>
+          <button type="button" class="btn-save" id="btn-confirmar-upload" onclick="confirmarUpload()" disabled>Subir archivo</button>
         </div>
 
         <!-- Galería -->
@@ -1490,9 +1487,9 @@ body.menu-open{ overflow:hidden; }
 
       <!-- Filtro período -->
       <div style="display:flex;gap:8px;margin-bottom:16px;margin-top:4px">
-        <button class="toggle-btn sel" id="filtro-dia"    onclick="setFiltroCaja('dia')"    style="font-size:12px;padding:8px">Hoy</button>
-        <button class="toggle-btn"     id="filtro-semana" onclick="setFiltroCaja('semana')" style="font-size:12px;padding:8px">Semana</button>
-        <button class="toggle-btn"     id="filtro-mes"    onclick="setFiltroCaja('mes')"    style="font-size:12px;padding:8px">Mes</button>
+        <button type="button" class="toggle-btn sel" id="filtro-dia"    onclick="setFiltroCaja('dia')"    style="font-size:12px;padding:8px">Hoy</button>
+        <button type="button" class="toggle-btn"     id="filtro-semana" onclick="setFiltroCaja('semana')" style="font-size:12px;padding:8px">Semana</button>
+        <button type="button" class="toggle-btn"     id="filtro-mes"    onclick="setFiltroCaja('mes')"    style="font-size:12px;padding:8px">Mes</button>
       </div>
 
       <!-- Totales -->
@@ -1513,7 +1510,7 @@ body.menu-open{ overflow:hidden; }
       <!-- Cobro manual -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <div class="section-label" style="margin:0;flex:1">Historial de cobros</div>
-        <button class="btn-primary" id="btn-cobro-manual" onclick="toggleCobroManual()" style="margin-left:12px;font-size:12px;padding:7px 14px">+ Cobro</button>
+        <button type="button" class="btn-primary" id="btn-cobro-manual" onclick="toggleCobroManual()" style="margin-left:12px;font-size:12px;padding:7px 14px">+ Cobro</button>
       </div>
       <div class="form-card" id="form-cobro-manual">
         <div class="form-header"><div class="form-icon">💰</div><div><div class="form-title">Registrar cobro manual</div><div class="form-sub">Para pagos fuera de un turno</div></div></div>
@@ -1540,7 +1537,7 @@ body.menu-open{ overflow:hidden; }
           </div>
         </div>
         <div class="err" id="cm-err"></div>
-        <button class="btn-save" onclick="guardarCobroManual()" id="btn-save-cm">Guardar cobro</button>
+        <button type="button" class="btn-save" onclick="guardarCobroManual()" id="btn-save-cm">Guardar cobro</button>
       </div>
       <div id="lista-cobros-periodo"></div>
 
@@ -1549,7 +1546,7 @@ body.menu-open{ overflow:hidden; }
       <div class="caja-card" style="border:1px solid rgba(212,175,55,.4)">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div><div class="caja-label">Pendiente de cierre</div><div class="caja-total" id="cierre-total" style="font-size:24px">$0</div></div>
-          <button id="btn-cerrar-caja" onclick="cerrarCaja()" style="background:linear-gradient(135deg,var(--brown),var(--gold-dark));color:#fff;border:none;border-radius:12px;padding:12px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent">Cerrar caja</button>
+          <button type="button" id="btn-cerrar-caja" onclick="cerrarCaja()" style="background:linear-gradient(135deg,var(--brown),var(--gold-dark));color:#fff;border:none;border-radius:12px;padding:12px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent">Cerrar caja</button>
         </div>
       </div>
       <div class="section-label" style="margin-top:20px">Cierres anteriores</div>
@@ -1562,7 +1559,7 @@ body.menu-open{ overflow:hidden; }
       <!-- Exportación de datos -->
       <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border)">
         <div class="section-label" style="margin-bottom:10px">Copia de seguridad</div>
-        <button onclick="exportarDatos()" style="width:100%;background:none;border:1px solid var(--border);border-radius:14px;padding:13px;font-size:13px;font-weight:600;color:var(--brown-soft);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;-webkit-tap-highlight-color:transparent">
+        <button type="button" onclick="exportarDatos()" style="width:100%;background:none;border:1px solid var(--border);border-radius:14px;padding:13px;font-size:13px;font-weight:600;color:var(--brown-soft);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;-webkit-tap-highlight-color:transparent">
           📥 Exportar todos los datos (JSON)
         </button>
         <div style="font-size:11px;color:var(--brown-soft);text-align:center;margin-top:6px">Descarga una copia completa de pacientes, turnos y caja</div>
@@ -1584,7 +1581,7 @@ body.menu-open{ overflow:hidden; }
 
       <!-- Botón agregar + form -->
       <div style="display:flex;justify-content:flex-end;margin-bottom:14px;gap:8px;flex-wrap:wrap">
-        <button class="btn-primary" id="btn-nuevo-trat" onclick="toggleFormTrat()" style="font-size:12px;padding:7px 14px">+ Tratamiento</button>
+        <button type="button" class="btn-primary" id="btn-nuevo-trat" onclick="toggleFormTrat()" style="font-size:12px;padding:7px 14px">+ Tratamiento</button>
       </div>
 
       <div class="form-card" id="form-trat">
@@ -1606,14 +1603,14 @@ body.menu-open{ overflow:hidden; }
           <div class="field"><label>Duración (min)</label><input type="number" id="tr-duracion" placeholder="30" inputmode="numeric"/></div>
         </div>
         <div class="err" id="tr-err"></div>
-        <button class="btn-save" id="btn-save-trat" onclick="guardarTratamiento()">Guardar tratamiento</button>
+        <button type="button" class="btn-save" id="btn-save-trat" onclick="guardarTratamiento()">Guardar tratamiento</button>
       </div>
 
       <!-- Lista de precios premium -->
       <div id="lista-precios"></div>
 
       <!-- Botón seed -->
-      <button onclick="cargarTratamientosPorDefecto()" style="background:none;border:1px dashed var(--gold);border-radius:12px;padding:12px;width:100%;color:var(--gold-dark);font-size:13px;font-weight:600;cursor:pointer;margin-top:12px;font-family:inherit;-webkit-tap-highlight-color:transparent">⬇ Cargar lista de precios Áurea Clinic</button>
+      <button type="button" onclick="cargarTratamientosPorDefecto()" style="background:none;border:1px dashed var(--gold);border-radius:12px;padding:12px;width:100%;color:var(--gold-dark);font-size:13px;font-weight:600;cursor:pointer;margin-top:12px;font-family:inherit;-webkit-tap-highlight-color:transparent">⬇ Cargar lista de precios Áurea Clinic</button>
     </div>
 
   </div>
@@ -1632,11 +1629,11 @@ body.menu-open{ overflow:hidden; }
     <div id="cobro-pagos-previos"></div>
     <div style="font-size:11px;font-weight:700;color:var(--gold-dark);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;margin-top:4px">Nuevos pagos</div>
     <div id="cobro-pagos-lista"></div>
-    <button onclick="agregarFilaPago()" style="background:none;border:1px dashed var(--gold);border-radius:12px;padding:10px;width:100%;color:var(--gold-dark);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;font-family:inherit">+ Agregar método de pago</button>
+    <button type="button" onclick="agregarFilaPago()" style="background:none;border:1px dashed var(--gold);border-radius:12px;padding:10px;width:100%;color:var(--gold-dark);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;font-family:inherit">+ Agregar método de pago</button>
     <div class="err" id="cobro-err"></div>
-    <button class="btn-cobrar" onclick="confirmarCobro()">Confirmar cobro</button>
-    <button class="btn-sin-cobro" onclick="cerrarModalCobro()">Marcar realizado sin cobro</button>
-    <button class="btn-sin-cobro" onclick="cancelarModalCobro()" style="margin-top:6px">Cancelar</button>
+    <button type="button" class="btn-cobrar" onclick="confirmarCobro()">Confirmar cobro</button>
+    <button type="button" class="btn-sin-cobro" onclick="cerrarModalCobro()">Marcar realizado sin cobro</button>
+    <button type="button" class="btn-sin-cobro" onclick="cancelarModalCobro()" style="margin-top:6px">Cancelar</button>
   </div>
 </div>
 
@@ -1662,7 +1659,7 @@ body.menu-open{ overflow:hidden; }
       <div class="field"><label>Email</label><input type="email" id="ed-pac-mail" inputmode="email"/></div>
       <div class="field"><label>Notas generales del paciente</label><textarea id="ed-pac-notas"></textarea></div>
       <div class="err" id="ed-pac-err"></div>
-      <button class="btn-save" onclick="guardarEdicionPaciente()">Guardar datos del paciente</button>
+      <button type="button" class="btn-save" onclick="guardarEdicionPaciente()">Guardar datos del paciente</button>
     </div>
 
     <!-- TAB Turno -->
@@ -1694,7 +1691,7 @@ body.menu-open{ overflow:hidden; }
       </div>
       <div class="field"><label>Notas del turno</label><textarea id="ed-notas"></textarea></div>
       <div class="err" id="ed-turno-err"></div>
-      <button class="btn-save" onclick="guardarEdicionTurno()">Guardar datos del turno</button>
+      <button type="button" class="btn-save" onclick="guardarEdicionTurno()">Guardar datos del turno</button>
     </div>
 
     <!-- TAB Pagos -->
@@ -1720,10 +1717,10 @@ body.menu-open{ overflow:hidden; }
         </div>
       </div>
       <div class="err" id="ep-err"></div>
-      <button class="btn-save" onclick="agregarPagoTurno()">Registrar pago</button>
+      <button type="button" class="btn-save" onclick="agregarPagoTurno()">Registrar pago</button>
     </div>
 
-    <button class="btn-sin-cobro" onclick="cerrarModalEdit()" style="margin-top:14px">Cerrar</button>
+    <button type="button" class="btn-sin-cobro" onclick="cerrarModalEdit()" style="margin-top:14px">Cerrar</button>
   </div>
 </div>
 
@@ -1737,14 +1734,14 @@ body.menu-open{ overflow:hidden; }
         <div class="modal-arch-cat" id="mav-categoria"></div>
         <div class="modal-arch-fecha" id="mav-fecha"></div>
       </div>
-      <button class="modal-arch-close" onclick="_cerrarModalArch()">✕</button>
+      <button type="button" class="modal-arch-close" onclick="_cerrarModalArch()">✕</button>
     </div>
     <div class="modal-arch-media">
       <img id="mav-img" style="display:none" alt="archivo clínico"/>
       <video id="mav-vid" style="display:none" controls muted playsinline></video>
     </div>
     <div id="mav-notas" class="modal-arch-notas"></div>
-    <button class="btn-del-archivo" onclick="eliminarArchivoActual()">🗑 Eliminar archivo</button>
+    <button type="button" class="btn-del-archivo" onclick="eliminarArchivoActual()">🗑 Eliminar archivo</button>
   </div>
 </div>
 
@@ -1763,7 +1760,7 @@ body.menu-open{ overflow:hidden; }
   <ul class="menu-list" id="menu-list" role="menu"></ul>
   <div class="menu-footer">
     <div class="menu-footer-user" id="menu-footer-user"></div>
-    <button class="btn-logout" onclick="logout()" style="margin-top:0">Salir</button>
+    <button type="button" class="btn-logout" onclick="logout()" style="margin-top:0">Salir</button>
   </div>
 </aside>
 
