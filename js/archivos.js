@@ -16,6 +16,7 @@ var archArchivoActual  = null;
 var archPendingFiles   = [];
 var formArchivoVisible = false;
 var _archLazyObserver  = null;
+var _archivosIniciado  = false;
 
 // ── Config de compresión ──────────────────────────────────────────
 var ARCH_MAX_WIDTH   = 1280;  // px lado más largo
@@ -26,6 +27,8 @@ var ARCH_MAX_BYTES   = 10 * 1024 * 1024; // 10 MB antes de comprimir
 // INIT
 // ═══════════════════════════════════════════════════════════════════
 function initArchivos() {
+  if (_archivosIniciado) return;
+  _archivosIniciado = true;
   _initDragDrop();
   _patchearFunciones();
   console.log('[Archivos] Módulo listo. Backend: Firebase DB + Canvas compression.');

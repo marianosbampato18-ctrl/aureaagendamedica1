@@ -88,7 +88,6 @@ function _entrarApp(nombre) {
   renderPrecios();
   renderTurnos();
   poblarSelectTratamientos();
-  if (typeof initArchivos === 'function') initArchivos();
   // Fix #15: verificar cierres incompletos al iniciar
   setTimeout(verificarCierresIncompletos, 3000);
 }
