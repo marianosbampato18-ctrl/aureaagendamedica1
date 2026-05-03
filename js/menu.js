@@ -1,6 +1,5 @@
 // ═══════════════════════════════════════════
 // MENU — Navegación sidebar desktop
-// Solo sidebar fijo — sin drawer mobile, sin calendario.
 // ═══════════════════════════════════════════
 
 var MENU_ITEMS = [
@@ -19,14 +18,12 @@ function _sidebarEls() {
   };
 }
 
-// ── Sidebar desktop ───────────────────────────────────────
+// Renderiza TODOS los ítems siempre — la visibilidad se maneja por rol
 function _renderSidebarItems() {
   var els = _sidebarEls();
   if (!els.nav) return;
   els.nav.innerHTML = '';
   MENU_ITEMS.forEach(function(it) {
-    // Ocultar ítems que el rol actual no puede ver
-    if (typeof usuarioPuede === 'function' && !usuarioPuede(it.key)) return;
     var li = document.createElement('li');
     li.setAttribute('role', 'none');
     var btn = document.createElement('button');
@@ -39,10 +36,49 @@ function _renderSidebarItems() {
       '<span class="aurea-sidebar-item-icon" aria-hidden="true">' + it.icon + '</span>' +
       '<span class="aurea-sidebar-item-label">' + it.label + '</span>';
     btn.addEventListener('click', function() {
-      try { showPanel(it.key); } catch(e) {}
+      _handleNavClick(it.key);
     });
     li.appendChild(btn);
     els.nav.appendChild(li);
+  });
+}
+
+// Click en nav: admin navega directo, recepcion ve prompt de contraseña
+function _handleNavClick(key) {
+  if (!usuarioActual) return;
+  // Si puede ver el panel, navegar normalmente
+  if (typeof usuarioPuede === 'function' && usuarioPuede(key)) {
+    try { showPanel(key); } catch(e) {}
+    return;
+  }
+  // Si no puede, pedir contraseña de admin
+  var pass = prompt('Esta sección requiere contraseña de administrador:');
+  if (!pass) return;
+  // Verificar si algún usuario admin tiene esa contraseña
+  var esAdmin = Object.keys(USUARIOS).some(function(email) {
+    return USUARIOS[email].rol === 'admin' && USUARIOS[email].pass === pass;
+  });
+  if (esAdmin) {
+    try { _showPanelSinFiltro(key); } catch(e) {}
+  } else {
+    alert('Contraseña incorrecta.');
+  }
+}
+
+// Aplica visibilidad de ítems según el rol del usuario actual
+function _applyRoleVisibility() {
+  MENU_ITEMS.forEach(function(it) {
+    var el = document.getElementById('aurea-sidebar-item-' + it.key);
+    if (!el) return;
+    // Sin usuario o si puede ver: mostrar normal
+    // Si no puede ver: mostrar pero con indicador de bloqueo
+    if (usuarioActual && typeof usuarioPuede === 'function' && !usuarioPuede(it.key)) {
+      el.style.opacity = '0.5';
+      el.title = 'Requiere contraseña de administrador';
+    } else {
+      el.style.opacity = '';
+      el.title = '';
+    }
   });
 }
 
@@ -73,6 +109,9 @@ function _syncActiveItem() {
   });
 }
 
+// showPanel sin filtro de permisos (solo para acceso con contraseña admin)
+var _showPanelSinFiltro = null;
+
 function initMenu() {
   if (_menuInitialized) return;
   var els = _sidebarEls();
@@ -81,27 +120,32 @@ function initMenu() {
   _renderSidebarItems();
   _refreshSidebarUser();
   _syncActiveItem();
+  _applyRoleVisibility();
 
-  // Mantener item activo en sync + bloquear paneles no permitidos
+  // Guardar referencia al showPanel original antes de parcharlo
+  if (typeof showPanel === 'function') {
+    _showPanelSinFiltro = showPanel;
+  }
+
+  // Parchamos showPanel para mantener el sync del ítem activo
   if (typeof showPanel === 'function' && !showPanel.__menuPatched) {
     var _orig = showPanel;
     window.showPanel = function(p) {
-      // Bloqueo silencioso: si el usuario no tiene permiso, no navega
-      if (typeof usuarioPuede === 'function' && !usuarioPuede(p)) return;
       var r = _orig.apply(this, arguments);
       try { _syncActiveItem(); } catch(e) {}
       try { _refreshSidebarUser(); } catch(e) {}
       return r;
     };
     window.showPanel.__menuPatched = true;
+    _showPanelSinFiltro = _orig; // apuntar al original, no al parche
   }
 
-  // Re-renderizar sidebar después del login con los permisos del usuario real
+  // Aplicar visibilidad de rol después de cada login
   if (typeof _entrarApp === 'function' && !_entrarApp.__menuPatched) {
     var _origEntrar = _entrarApp;
     window._entrarApp = function() {
       var r = _origEntrar.apply(this, arguments);
-      try { _renderSidebarItems(); } catch(e) {}  // re-renderiza con rol correcto
+      try { _applyRoleVisibility(); } catch(e) {}
       try { _refreshSidebarUser(); } catch(e) {}
       try { _syncActiveItem(); } catch(e) {}
       return r;
