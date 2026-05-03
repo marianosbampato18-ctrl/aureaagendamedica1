@@ -1117,6 +1117,9 @@ body.menu-open{ overflow:hidden; }
     <ul class="aurea-sidebar-nav" id="aurea-sidebar-nav" role="menu"></ul>
     <div class="aurea-sidebar-footer">
       <div class="aurea-sidebar-user" id="aurea-sidebar-user"></div>
+      <button type="button" id="gcal-btn" onclick="gcalConectar()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.65);border-radius:10px;padding:8px 12px;font-size:10px;font-weight:600;font-family:var(--font-display);letter-spacing:.18em;text-transform:uppercase;cursor:pointer;margin-bottom:8px;text-align:center;-webkit-tap-highlight-color:transparent;transition:background .2s,border-color .2s,color .2s" title="Conectar Google Calendar">
+        <span style="font-size:13px">📅</span> Conectar Google Calendar
+      </button>
       <button type="button" class="aurea-sidebar-logout" type="button" onclick="logout()">Salir</button>
     </div>
   </aside>
@@ -1782,6 +1785,8 @@ body.menu-open{ overflow:hidden; }
 <script src="js/precios.js"></script>     <!-- Tratamientos y precios -->
 <script src="js/modales.js"></script>     <!-- Modales de edición -->
 <script src="js/menu.js"></script>        <!-- Navegación sidebar -->
+<script src="js/gcal.js"></script>        <!-- Google Calendar sync -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="js/archivos.js"></script>    <!-- Módulo archivos clínicos (Firebase DB + Canvas) -->
 
 </body>

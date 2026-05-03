@@ -174,9 +174,16 @@ function guardarTurno() {
         estado: 'confirmado', fecha: hoy, anticipado: true
       });
     }).then(function(){ return refs; });
-  }).then(function() {
+  }).then(function(refs) {
     btn.disabled=false; btn.textContent='Guardar turno';
     toggleFormTurno();
+    // Sincronizar con Google Calendar
+    if (refs && refs.turnoKey) {
+      try { gcalCrearEvento(refs.turnoKey, {
+        paciente: nomPac, tratamiento: trat, telefono: telPac,
+        dni: dniPac, fecha: fecha, hora: hora, notas: notas
+      }); } catch(e) {}
+    }
   }).catch(function(e) {
     btn.disabled=false; btn.textContent='Guardar turno';
     err.textContent='Error al guardar: '+(e&&e.message||'')+'. Verificá internet.'; err.className='err visible';
@@ -203,6 +210,10 @@ function cambiarEstado(key, estado) {
   var t = turnosData[key];
   if (!t) return;
   db.ref('turnos/'+key).update({ estado: estado });
+  // Eliminar de Google Calendar si se cancela
+  if (estado === 'cancelado') {
+    try { gcalEliminarEvento(key, t); } catch(e) {}
+  }
 
   // Historial solo al completar, con guard anti-duplicado
   if (estado === 'completado' && t.pacienteKey) {

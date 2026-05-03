@@ -171,6 +171,11 @@ function guardarEdicionTurno() {
       });
     }
     alert('Datos del turno guardados.');
+    // Sincronizar con Google Calendar
+    var turnoActualizado = turnosData[turnoEditKey] || {};
+    try { gcalActualizarEvento(turnoEditKey, Object.assign({}, turnoActualizado, {
+      tratamiento: trat, precio: precio, fecha: fecha, hora: hora, notas: notas
+    })); } catch(e) {}
   }).catch(function(){
     err.textContent='Error al guardar.'; err.className='err visible';
   });
