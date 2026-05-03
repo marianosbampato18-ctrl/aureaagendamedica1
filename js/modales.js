@@ -127,12 +127,21 @@ function guardarEdicionTurno() {
   var key = document.getElementById('ed-trat-sel').value;
   var trat = '';
   var tratKey = '';
+  // FIX #3: mantener tratamientos[] actualizado (backward compat con string tratamiento)
+  var tratamientosArray = [];
+
   if (key === '__libre__') {
     trat = document.getElementById('ed-trat-libre').value.trim();
+    // Tratamiento libre: guardar como array de un elemento
+    tratamientosArray = [{ nombre: trat, precio: parseFloat(document.getElementById('ed-precio-edit').value) || 0, key: '__libre__' }];
   } else if (key && tratamientosData[key]) {
-    trat = tratamientosData[key].nombre;
+    var tr = tratamientosData[key];
+    trat = tr.nombre;
     tratKey = key;
+    // Tratamiento del catálogo: guardar como array de un elemento
+    tratamientosArray = [{ nombre: tr.nombre, precio: parseFloat(tr.precio) || 0, key: key }];
   }
+
   var precio = parseFloat(document.getElementById('ed-precio-edit').value) || 0;
   var fecha  = document.getElementById('ed-fecha').value;
   var hh     = document.getElementById('ed-hh').value;
@@ -143,8 +152,13 @@ function guardarEdicionTurno() {
   if (!trat || !fecha || !hora) { err.textContent='Completá tratamiento, fecha y hora.'; err.className='err visible'; return; }
   err.className = 'err';
   db.ref('turnos/'+turnoEditKey).update({
-    tratamiento: trat, tratamientoKey: tratKey,
-    precio: precio, fecha: fecha, hora: hora, notas: notas
+    tratamiento:  trat,
+    tratamientos: tratamientosArray,  // FIX #3: actualiza el array para consistency
+    tratamientoKey: tratKey,
+    precio:       precio,
+    fecha:        fecha,
+    hora:         hora,
+    notas:        notas
   }).then(function(){
     // Si hay venta asociada, actualizar montoTotal
     var v = buscarVentaDeTurno(turnoEditKey);

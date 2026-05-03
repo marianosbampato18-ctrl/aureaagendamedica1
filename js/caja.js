@@ -1,6 +1,19 @@
 // ═══════════════════════════════════════════
 // CAJA — Cobros, pagos, cierres de caja
+//
+// FIX CRÍTICO #1: todos los cálculos de totales y cierres
+//   ahora excluyen pagos con eliminado:true (soft-deleted).
+//   Antes los pagos eliminados seguían sumando en caja.
+//
+// FIX CRÍTICO #2: guard anti-duplicado de historial clínico.
+//   confirmarCobro() y cerrarModalCobro() verifican que no
+//   exista ya una entrada con turnoId antes de crear otra.
+//
+// FASE 3: confirmarCobro() maneja estado 'in_progress'
+//   (turno en atención) → pasa a 'completado' correctamente.
 // ═══════════════════════════════════════════
+
+// ── Helpers de pagos ──────────────────────────────────────────────
 function buscarVentaDeTurno(turnoKey) {
   var encontrada = null;
   Object.keys(ventasData).forEach(function(k){
@@ -15,6 +28,7 @@ function pagosDeTurno(turnoKey) {
   return Object.keys(pagosData)
     .filter(function(pk){
       var pg = pagosData[pk];
+      // FIX #1: excluir pagos eliminados (soft-delete)
       return pg.ventaId === v.key && pg.estado === 'confirmado' && !pg.eliminado;
     })
     .map(function(pk){ return Object.assign({_key:pk}, pagosData[pk]); });
@@ -24,6 +38,7 @@ function totalPagadoTurno(turnoKey) {
   return pagosDeTurno(turnoKey).reduce(function(s,p){ return s + (parseFloat(p.monto)||0); }, 0);
 }
 
+// ── Modal de cobro ────────────────────────────────────────────────
 function abrirModalCobro(turnoKey) {
   turnoCobroKey = turnoKey;
   var t = turnosData[turnoKey];
@@ -38,13 +53,12 @@ function abrirModalCobro(turnoKey) {
 
   var pagosPrev = pagosDeTurno(turnoKey);
   var pagado = pagosPrev.reduce(function(s,p){ return s + p.monto; }, 0);
-  var resta = Math.max(precioTotal - pagado, 0);
+  var resta  = Math.max(precioTotal - pagado, 0);
 
   document.getElementById('cobro-total').textContent  = '$' + precioTotal.toLocaleString('es-AR');
   document.getElementById('cobro-pagado').textContent = '$' + pagado.toLocaleString('es-AR');
   document.getElementById('cobro-resta').textContent  = '$' + resta.toLocaleString('es-AR');
 
-  // Mostrar pagos previos (anticipados) si existen
   var prevDiv = document.getElementById('cobro-pagos-previos');
   if (pagosPrev.length) {
     prevDiv.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--gold-dark);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">Pagos previos (anticipados)</div>' +
@@ -62,7 +76,6 @@ function abrirModalCobro(turnoKey) {
   document.getElementById('cobro-err').className = 'err';
   document.getElementById('cobro-pagos-lista').innerHTML = '';
 
-  // Si hay deuda, sugerir cobrar el resto. Si no hay deuda, no agregar fila (ya está pagado).
   if (resta > 0) {
     filasCobroPago.push({ monto: resta, metodo: 'efectivo' });
     var idx = 0;
@@ -87,24 +100,33 @@ function cancelarModalCobro() {
 }
 
 function cerrarModalCobro() {
-  // "Marcar realizado sin cobro" → no crea pagos pero marca como completado
+  // "Marcar realizado sin cobro" — no crea pagos pero cierra el turno
   if (!turnoCobroKey) return;
   var t = turnosData[turnoCobroKey];
   if (!confirm('¿Marcar como realizado sin registrar cobro?')) return;
   document.getElementById('modal-cobro').className = 'modal-overlay';
+
+  // Pasa a completado sin importar si venía de proximo o in_progress
   db.ref('turnos/'+turnoCobroKey).update({ estado: 'completado' });
-  if (t && t.pacienteKey) {
+
+  // FIX #2: guard anti-duplicado de historial
+  if (t && t.pacienteKey && !_historialYaRegistrado(t.pacienteKey, turnoCobroKey)) {
     db.ref('pacientes/'+t.pacienteKey+'/historial').push({
-      fecha: t.fecha, tratamiento: t.tratamiento, productos: '', notas: t.notas||'', auto: true
+      fecha:       t.fecha,
+      tratamiento: t.tratamiento,
+      productos:   '',
+      notas:       t.notas || '',
+      auto:        true,
+      turnoId:     turnoCobroKey   // campo nuevo: previene duplicados
     });
   }
   turnoCobroKey = null;
 }
 
-function iconoMetodo(m){
+function iconoMetodo(m) {
   return ({efectivo:'💵',transferencia:'📲',tarjeta:'💳',mercadopago:'💸',qr:'📱'})[m] || '💰';
 }
-function nombreMetodo(m){
+function nombreMetodo(m) {
   return ({efectivo:'Efectivo',transferencia:'Transferencia',tarjeta:'Tarjeta',mercadopago:'Mercado Pago',qr:'QR'})[m] || m;
 }
 
@@ -143,24 +165,27 @@ function actualizarTotalesCobro() {
   if (v && v.venta.montoTotal) precioTotal = parseFloat(v.venta.montoTotal);
   var pagado = totalPagadoTurno(turnoCobroKey);
   var nuevos = filasCobroPago.reduce(function(s,f){ return s + (f && parseFloat(f.monto)||0); }, 0);
-  var resta = Math.max(precioTotal - pagado - nuevos, 0);
+  var resta  = Math.max(precioTotal - pagado - nuevos, 0);
   document.getElementById('cobro-resta').textContent = '$' + resta.toLocaleString('es-AR');
 }
 
 function confirmarCobro() {
   var t = turnosData[turnoCobroKey];
   var pagosValidos = filasCobroPago.filter(function(f){ return f && parseFloat(f.monto) > 0; });
+
   if (!pagosValidos.length) {
     var _precioChk = parseFloat(t.precio) || 0;
     var _vChk = buscarVentaDeTurno(turnoCobroKey);
     if (_vChk && _vChk.venta.montoTotal) _precioChk = parseFloat(_vChk.venta.montoTotal);
     var _pagadoChk = totalPagadoTurno(turnoCobroKey);
     if (_pagadoChk >= _precioChk && _precioChk > 0) {
-      // Turno ya saldado: marcar como completado sin exigir nuevo pago
+      // Turno ya saldado — marcar completado sin nuevo pago
       db.ref('turnos/'+turnoCobroKey).update({ estado: 'completado' });
-      if (t && t.pacienteKey) {
+      // FIX #2: guard anti-duplicado
+      if (t && t.pacienteKey && !_historialYaRegistrado(t.pacienteKey, turnoCobroKey)) {
         db.ref('pacientes/'+t.pacienteKey+'/historial').push({
-          fecha: t.fecha, tratamiento: t.tratamiento, productos: '', notas: t.notas||'', auto: true
+          fecha: t.fecha, tratamiento: t.tratamiento,
+          productos: '', notas: t.notas||'', auto: true, turnoId: turnoCobroKey
         });
       }
       document.getElementById('modal-cobro').className = 'modal-overlay';
@@ -171,51 +196,69 @@ function confirmarCobro() {
     document.getElementById('cobro-err').className='err visible';
     return;
   }
+
   var montoTotalNuevo = pagosValidos.reduce(function(s,f){ return s + parseFloat(f.monto); }, 0);
   var hoy = new Date().toISOString().split('T')[0];
   var precioTotal = parseFloat(t.precio) || 0;
   var v = buscarVentaDeTurno(turnoCobroKey);
 
-  // Si ya hay venta para este turno, sumar pagos ahí. Si no, crear venta.
   var promesaVentaId;
   if (v) {
     promesaVentaId = Promise.resolve(v.key);
   } else {
     if (!precioTotal) precioTotal = totalPagadoTurno(turnoCobroKey) + montoTotalNuevo;
     promesaVentaId = db.ref('ventas').push({
-      pacienteId: t.pacienteKey || '', turnoId: turnoCobroKey,
-      descripcion: t.tratamiento, montoTotal: precioTotal,
-      estado: 'pendiente', fecha: hoy
+      pacienteId:  t.pacienteKey || '',
+      turnoId:     turnoCobroKey,
+      descripcion: t.tratamiento,
+      montoTotal:  precioTotal,
+      estado:      'pendiente',
+      fecha:       hoy
     }).then(function(r){ return r.key; });
   }
+
+  var _turnoCobroKeyCopy = turnoCobroKey; // capturar para el closure
 
   promesaVentaId.then(function(ventaId) {
     var promesas = pagosValidos.map(function(f) {
       return db.ref('pagos').push({
-        ventaId: ventaId, turnoId: turnoCobroKey, pacienteId: t.pacienteKey || '',
-        metodo: f.metodo, monto: parseFloat(f.monto),
-        estado: 'confirmado', fecha: hoy
+        ventaId:    ventaId,
+        turnoId:    _turnoCobroKeyCopy,
+        pacienteId: t.pacienteKey || '',
+        metodo:     f.metodo,
+        monto:      parseFloat(f.monto),
+        estado:     'confirmado',
+        fecha:      hoy
       });
     });
     return Promise.all(promesas).then(function(){ return ventaId; });
   }).then(function(ventaId) {
-    // Re-evaluar estado de la venta
-    var totalAhora = totalPagadoTurno(turnoCobroKey) + montoTotalNuevo;
+    var totalAhora = totalPagadoTurno(_turnoCobroKeyCopy) + montoTotalNuevo;
     var precioFinal = (ventasData[ventaId] && ventasData[ventaId].montoTotal) || precioTotal;
-    var nuevoEstado = totalAhora >= precioFinal ? 'pagada' : 'pendiente';
-    db.ref('ventas/'+ventaId).update({ estado: nuevoEstado });
-    db.ref('turnos/'+turnoCobroKey).update({ estado: 'completado' });
-    if (t && t.pacienteKey) {
+    var nuevoEstadoVenta = totalAhora >= precioFinal ? 'pagada' : 'pendiente';
+    db.ref('ventas/'+ventaId).update({ estado: nuevoEstadoVenta });
+
+    // FASE 3: turno pasa a completado desde proximo O desde in_progress
+    db.ref('turnos/'+_turnoCobroKeyCopy).update({ estado: 'completado' });
+
+    // FIX #2: guard anti-duplicado de historial
+    if (t && t.pacienteKey && !_historialYaRegistrado(t.pacienteKey, _turnoCobroKeyCopy)) {
       db.ref('pacientes/'+t.pacienteKey+'/historial').push({
-        fecha: t.fecha, tratamiento: t.tratamiento, productos: '', notas: t.notas||'', auto: true
+        fecha:       t.fecha,
+        tratamiento: t.tratamiento,
+        productos:   '',
+        notas:       t.notas || '',
+        auto:        true,
+        turnoId:     _turnoCobroKeyCopy
       });
     }
+
     document.getElementById('modal-cobro').className = 'modal-overlay';
     turnoCobroKey = null;
   });
 }
 
-// ── CAJA ──
+// ── CAJA ─────────────────────────────────────────────────────────
 function setFiltroCaja(f) {
   filtroCaja = f;
   ['dia','semana','mes'].forEach(function(x){
@@ -291,12 +334,15 @@ function guardarCobroManual() {
   var hoy = new Date().toISOString().split('T')[0];
   var nombreEscrito = document.getElementById('cm-pac').value.trim();
   db.ref('pagos').push({
-    ventaId: '',
-    pacienteId: cmPacienteKey || '',
+    ventaId:        '',
+    pacienteId:     cmPacienteKey || '',
     pacienteNombre: cmPacienteKey ? '' : nombreEscrito,
-    descripcion: desc,
-    metodo: cmMetodo, monto: monto,
-    estado: 'confirmado', fecha: hoy, manual: true
+    descripcion:    desc,
+    metodo:         cmMetodo,
+    monto:          monto,
+    estado:         'confirmado',
+    fecha:          hoy,
+    manual:         true
   }).then(function() {
     if (_btnCM) { _btnCM.disabled=false; _btnCM.textContent='Guardar cobro'; }
     ['cm-pac','cm-desc','cm-monto'].forEach(function(id){ document.getElementById(id).value=''; });
@@ -310,26 +356,24 @@ function guardarCobroManual() {
   });
 }
 
+// ── Cierre de caja ────────────────────────────────────────────────
 function cerrarCaja() {
   if (!requiereAdmin()) return;
   var hoy = new Date().toISOString().split('T')[0];
 
-  // ── GUARD: no doble cierre del mismo día ─────────────────
   var cierreHoy = null;
   Object.keys(cierresData).forEach(function(k) {
     if (cierresData[k].fecha === hoy) cierreHoy = { key: k, cierre: cierresData[k] };
   });
 
-  // ── Detectar cierre incompleto (Fix #15) ─────────────────
-  // Si hay un cierre de hoy con estado 'en_curso', significa que
-  // se guardó el cierre pero falló el batch de cierreId en los pagos.
-  // Lo completamos automáticamente.
+  // Recuperar cierre incompleto (Fix #15)
   if (cierreHoy && cierreHoy.cierre.estado === 'en_curso') {
     var cierreId = cierreHoy.key;
     var updates = {};
     Object.keys(pagosData).forEach(function(k) {
       var p = pagosData[k];
-      if (p.fecha === hoy && p.estado === 'confirmado' && !p.cierreId) {
+      // FIX #1: excluir eliminados del batch de cierre
+      if (p.fecha === hoy && p.estado === 'confirmado' && !p.cierreId && !p.eliminado) {
         updates['pagos/' + k + '/cierreId'] = cierreId;
       }
     });
@@ -349,10 +393,10 @@ function cerrarCaja() {
     return;
   }
 
-  // ── Pagos pendientes de cierre ────────────────────────────
+  // Pagos del día pendientes de cierre — FIX #1: excluye eliminados
   var pagosHoy = Object.keys(pagosData).filter(function(k) {
     var p = pagosData[k];
-    return p.fecha === hoy && p.estado === 'confirmado' && !p.cierreId;
+    return p.fecha === hoy && p.estado === 'confirmado' && !p.cierreId && !p.eliminado;
   });
 
   if (!pagosHoy.length) {
@@ -363,15 +407,13 @@ function cerrarCaja() {
   var totales = { total:0, efectivo:0, transferencia:0, tarjeta:0, mercadopago:0, qr:0 };
   pagosHoy.forEach(function(k) {
     var p = pagosData[k];
-    totales.total        += parseFloat(p.monto) || 0;
-    totales[p.metodo]     = (totales[p.metodo] || 0) + (parseFloat(p.monto) || 0);
+    totales.total     += parseFloat(p.monto) || 0;
+    totales[p.metodo]  = (totales[p.metodo] || 0) + (parseFloat(p.monto) || 0);
   });
 
   if (!confirm('¿Cerrar caja del día con $' + totales.total.toLocaleString('es-AR') + ' (' + pagosHoy.length + ' movimientos)?')) return;
 
-  // ── Paso 1: guardar cierre con estado 'en_curso' ──────────
-  // Si la conexión se corta aquí, al próximo login se detecta
-  // el estado 'en_curso' y se completa automáticamente.
+  // Paso 1: guardar cierre con estado 'en_curso'
   db.ref('cierres').push({
     fecha:           hoy,
     total:           totales.total,
@@ -382,17 +424,12 @@ function cerrarCaja() {
     qr:              totales.qr              || 0,
     cantMovimientos: pagosHoy.length,
     timestamp:       Date.now(),
-    estado:          'en_curso'   // ← marcador de atomicidad
+    estado:          'en_curso'
   }).then(function(ref) {
     var cierreId = ref.key;
-
-    // ── Paso 2: marcar pagos con cierreId (batch) ────────────
     var updates = {};
-    pagosHoy.forEach(function(k) {
-      updates['pagos/' + k + '/cierreId'] = cierreId;
-    });
+    pagosHoy.forEach(function(k) { updates['pagos/' + k + '/cierreId'] = cierreId; });
     return db.ref().update(updates).then(function() {
-      // ── Paso 3: marcar cierre como completado ────────────
       return db.ref('cierres/' + cierreId + '/estado').set('completado');
     });
   }).catch(function(e) {
@@ -401,58 +438,58 @@ function cerrarCaja() {
   });
 }
 
-// Calcula solo los pagos del día que AÚN NO fueron incluidos en un cierre.
-// Es lo que se muestra en el botón "Cerrar caja".
+// Totales pendientes de cierre (para el botón "Cerrar caja")
+// FIX #1: excluye pagos eliminados
 function calcularPendienteCierre() {
   var hoy = new Date().toISOString().split('T')[0];
   var totales = { total:0, efectivo:0, transferencia:0, tarjeta:0, mercadopago:0, qr:0 };
   Object.keys(pagosData).forEach(function(k) {
     var p = pagosData[k];
-    if (p.fecha === hoy && p.estado === 'confirmado' && !p.cierreId) {
-      totales.total        += parseFloat(p.monto) || 0;
-      totales[p.metodo]     = (totales[p.metodo] || 0) + (parseFloat(p.monto) || 0);
+    if (p.fecha === hoy && p.estado === 'confirmado' && !p.cierreId && !p.eliminado) {
+      totales.total    += parseFloat(p.monto) || 0;
+      totales[p.metodo] = (totales[p.metodo] || 0) + (parseFloat(p.monto) || 0);
     }
   });
   return totales;
 }
 
+// Totales para el período seleccionado (día/semana/mes)
+// FIX #1: excluye pagos eliminados
 function calcularTotalesPeriodo(periodo) {
   var hoy = new Date();
   var totales = { total:0, efectivo:0, transferencia:0, tarjeta:0, mercadopago:0, qr:0 };
   Object.keys(pagosData).forEach(function(k) {
     var p = pagosData[k];
-    if (p.estado !== 'confirmado') return;
+    // FIX #1: excluir eliminados + solo confirmados
+    if (p.estado !== 'confirmado' || p.eliminado) return;
     var fp = new Date(p.fecha + 'T00:00:00');
     var incluir = false;
-    if (periodo === 'dia') incluir = p.fecha === hoy.toISOString().split('T')[0];
-    else if (periodo === 'semana') {
-      var diff = (hoy - fp) / (1000*60*60*24);
-      incluir = diff >= 0 && diff < 7;
-    } else if (periodo === 'mes') {
-      incluir = fp.getMonth() === hoy.getMonth() && fp.getFullYear() === hoy.getFullYear();
-    }
+    if      (periodo === 'dia')    incluir = p.fecha === hoy.toISOString().split('T')[0];
+    else if (periodo === 'semana') { var diff = (hoy - fp) / (1000*60*60*24); incluir = diff >= 0 && diff < 7; }
+    else if (periodo === 'mes')    incluir = fp.getMonth() === hoy.getMonth() && fp.getFullYear() === hoy.getFullYear();
     if (incluir) {
-      totales.total += p.monto;
-      totales[p.metodo] = (totales[p.metodo]||0) + p.monto;
+      totales.total     += p.monto;
+      totales[p.metodo]  = (totales[p.metodo]||0) + p.monto;
     }
   });
   return totales;
 }
 
+// ── Render del panel caja ─────────────────────────────────────────
 function renderCaja() {
   var t = calcularTotalesPeriodo(filtroCaja);
   var labels = { dia:'Hoy', semana:'Esta semana', mes:'Este mes' };
   var hoyFmt = new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
   document.getElementById('caja-periodo-label').textContent = labels[filtroCaja];
-  document.getElementById('caja-fecha-hoy').textContent = hoyFmt;
-  document.getElementById('caja-total-dia').textContent  = '$' + t.total.toLocaleString('es-AR');
-  document.getElementById('caja-efectivo').textContent   = '$' + (t.efectivo||0).toLocaleString('es-AR');
+  document.getElementById('caja-fecha-hoy').textContent     = hoyFmt;
+  document.getElementById('caja-total-dia').textContent     = '$' + t.total.toLocaleString('es-AR');
+  document.getElementById('caja-efectivo').textContent      = '$' + (t.efectivo||0).toLocaleString('es-AR');
   document.getElementById('caja-transferencia').textContent = '$' + (t.transferencia||0).toLocaleString('es-AR');
-  document.getElementById('caja-tarjeta').textContent    = '$' + (t.tarjeta||0).toLocaleString('es-AR');
-  document.getElementById('caja-mercadopago').textContent = '$' + (t.mercadopago||0).toLocaleString('es-AR');
-  document.getElementById('caja-qr').textContent         = '$' + (t.qr||0).toLocaleString('es-AR');
-  // El botón "Cerrar caja" muestra solo lo pendiente (no cerrado aún)
-  var pendiente = calcularPendienteCierre();
+  document.getElementById('caja-tarjeta').textContent       = '$' + (t.tarjeta||0).toLocaleString('es-AR');
+  document.getElementById('caja-mercadopago').textContent   = '$' + (t.mercadopago||0).toLocaleString('es-AR');
+  document.getElementById('caja-qr').textContent            = '$' + (t.qr||0).toLocaleString('es-AR');
+
+  var pendiente  = calcularPendienteCierre();
   var yaCerradoHoy = Object.keys(cierresData).some(function(k) {
     return cierresData[k].fecha === new Date().toISOString().split('T')[0];
   });
@@ -462,19 +499,21 @@ function renderCaja() {
   if (btnCierre) {
     if (yaCerradoHoy) {
       btnCierre.textContent = '✓ Caja cerrada hoy';
-      btnCierre.disabled = true;
+      btnCierre.disabled    = true;
       btnCierre.style.opacity = '.5';
     } else {
-      btnCierre.textContent = 'Cerrar caja';
-      btnCierre.disabled = false;
+      btnCierre.textContent   = 'Cerrar caja';
+      btnCierre.disabled      = false;
       btnCierre.style.opacity = '';
     }
   }
 
-  // Lista cobros del período
+  // Lista cobros del período — FIX #1: excluye eliminados
+  var hoy = new Date();
   var cobros = Object.keys(pagosData).filter(function(k){
-    var p = pagosData[k]; if (p.estado !== 'confirmado') return false;
-    var hoy = new Date(); var fp = new Date(p.fecha+'T00:00:00');
+    var p = pagosData[k];
+    if (p.estado !== 'confirmado' || p.eliminado) return false;  // FIX #1
+    var fp = new Date(p.fecha+'T00:00:00');
     if (filtroCaja==='dia')    return p.fecha === hoy.toISOString().split('T')[0];
     if (filtroCaja==='semana') return (hoy-fp)/(1000*60*60*24) >= 0 && (hoy-fp)/(1000*60*60*24) < 7;
     if (filtroCaja==='mes')    return fp.getMonth()===hoy.getMonth() && fp.getFullYear()===hoy.getFullYear();
@@ -482,14 +521,14 @@ function renderCaja() {
 
   var iconos = { efectivo:'💵', transferencia:'📲', tarjeta:'💳', mercadopago:'💸', qr:'📱' };
   var listaCobros = document.getElementById('lista-cobros-periodo');
-  if (!cobros.length) { listaCobros.innerHTML = '<div class="empty"><div class="empty-icon">💰</div>Sin cobros en este período</div>'; }
-  else {
+  if (!cobros.length) {
+    listaCobros.innerHTML = '<div class="empty"><div class="empty-icon">💰</div>Sin cobros en este período</div>';
+  } else {
     listaCobros.innerHTML = cobros.map(function(k){
-      var p = pagosData[k];
+      var p  = pagosData[k];
       var pf = parseFecha(p.fecha);
-      // Resolver nombre del paciente y descripción del servicio
       var nombrePaciente = '';
-      var descServicio = '';
+      var descServicio   = '';
       if (p.pacienteId && pacientesData[p.pacienteId]) {
         nombrePaciente = pacientesData[p.pacienteId].nombre;
       } else if (p.pacienteNombre) {
@@ -504,8 +543,8 @@ function renderCaja() {
       if (!descServicio && p.descripcion) descServicio = p.descripcion;
       if (!nombrePaciente) nombrePaciente = p.manual ? 'Cobro manual' : 'Sin paciente';
 
-      var tagAnt = p.anticipado ? '<span style="display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:#FFF8E6;color:#9A7020;border:1px solid #E8C96A;margin-left:6px;text-transform:uppercase">Anticipado</span>' : '';
-      var tagManual = p.manual ? '<span style="display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:#F5EFE4;color:var(--gold-dark);border:1px solid rgba(184,154,106,.3);margin-left:6px;text-transform:uppercase">Manual</span>' : '';
+      var tagAnt    = p.anticipado ? '<span style="display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:#FFF8E6;color:#9A7020;border:1px solid #E8C96A;margin-left:6px;text-transform:uppercase">Anticipado</span>' : '';
+      var tagManual = p.manual     ? '<span style="display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:#F5EFE4;color:var(--gold-dark);border:1px solid rgba(184,154,106,.3);margin-left:6px;text-transform:uppercase">Manual</span>' : '';
 
       return '<div class="deuda-pac-card" style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">' +
         '<div style="flex:1;min-width:0">' +
@@ -521,10 +560,11 @@ function renderCaja() {
   // Cierres anteriores
   var claves = Object.keys(cierresData).sort(function(a,b){ return cierresData[b].timestamp - cierresData[a].timestamp; });
   var listaCierres = document.getElementById('lista-cierres');
-  if (!claves.length) { listaCierres.innerHTML = '<div class="empty"><div class="empty-icon">✦</div>Sin cierres registrados</div>'; }
-  else {
+  if (!claves.length) {
+    listaCierres.innerHTML = '<div class="empty"><div class="empty-icon">✦</div>Sin cierres registrados</div>';
+  } else {
     listaCierres.innerHTML = claves.slice(0,10).map(function(k){
-      var c = cierresData[k];
+      var c  = cierresData[k];
       var pf = parseFecha(c.fecha);
       var movTxt = c.cantMovimientos ? ' · ' + c.cantMovimientos + ' mov.' : '';
       return '<div class="deuda-pac-card">' +
@@ -537,21 +577,23 @@ function renderCaja() {
     }).join('');
   }
 
-  // Deudas
+  // Deudas — FIX #1: recalcula pagado excluyendo eliminados
   var deudas = [];
   Object.keys(ventasData).forEach(function(vk) {
     var v = ventasData[vk];
     if (v.estado === 'pagada') return;
     var pagado = Object.keys(pagosData).reduce(function(s,pk){
       var pg = pagosData[pk];
-      return pg.ventaId===vk && pg.estado==='confirmado' ? s+pg.monto : s;
-    },0);
-    var resta = v.montoTotal - pagado;
-    if (resta > 0) deudas.push({ pacienteId:v.pacienteId, desc:v.descripcion, resta:resta });
+      // FIX #1: no contar pagos eliminados en el cálculo de deuda
+      return (pg.ventaId===vk && pg.estado==='confirmado' && !pg.eliminado) ? s+pg.monto : s;
+    }, 0);
+    var resta = (v.montoTotal||0) - pagado;
+    if (resta > 0) deudas.push({ pacienteId: v.pacienteId, desc: v.descripcion, resta: resta });
   });
   var listaDeudas = document.getElementById('lista-deudas');
-  if (!deudas.length) { listaDeudas.innerHTML='<div class="empty"><div class="empty-icon">✦</div>Sin deudas pendientes</div>'; }
-  else {
+  if (!deudas.length) {
+    listaDeudas.innerHTML = '<div class="empty"><div class="empty-icon">✦</div>Sin deudas pendientes</div>';
+  } else {
     listaDeudas.innerHTML = deudas.map(function(d){
       var pac = pacientesData[d.pacienteId];
       return '<div class="deuda-pac-card"><div style="display:flex;justify-content:space-between;align-items:center">' +
@@ -562,7 +604,7 @@ function renderCaja() {
   }
 }
 
-// ── PRIMERA VEZ TOGGLE ──
+// ── PRIMERA VEZ TOGGLE ────────────────────────────────────────────
 function setPV(val) {
   pvSeleccion = val;
   pacienteSeleccionadoKey = null;
@@ -574,7 +616,7 @@ function setPV(val) {
   if (val === false) document.getElementById('t-pac-buscar').value = '';
 }
 
-// ── AUTOCOMPLETE ──
+// ── AUTOCOMPLETE ──────────────────────────────────────────────────
 function buscarPaciente(query) {
   var box = document.getElementById('suggestions');
   pacienteSeleccionadoKey = null;
@@ -600,15 +642,15 @@ function seleccionarPaciente(key) {
   pacienteSeleccionadoKey = key;
   var p = pacientesData[key];
   var histCount = p.historial ? Object.keys(p.historial).length : 0;
-  document.getElementById('t-pac-buscar').value = p.nombre;
+  document.getElementById('t-pac-buscar').value  = p.nombre;
   document.getElementById('suggestions').className = 'suggestions';
   document.getElementById('fc-nombre').textContent = p.nombre + (p.pacienteId ? '  #'+p.pacienteId : '');
-  document.getElementById('fc-data').textContent = (p.telefono ? '📞 '+p.telefono : '') + (p.dni ? '  ·  🪪 DNI '+p.dni : '') + (p.email ? '  ·  ✉ '+p.email : '');
-  document.getElementById('fc-hist').textContent = histCount + ' visita'+(histCount!==1?'s anteriores':'anterior');
+  document.getElementById('fc-data').textContent   = (p.telefono ? '📞 '+p.telefono : '') + (p.dni ? '  ·  🪪 DNI '+p.dni : '') + (p.email ? '  ·  ✉ '+p.email : '');
+  document.getElementById('fc-hist').textContent   = histCount + ' visita'+(histCount!==1?'s anteriores':'anterior');
   document.getElementById('ficha-cargada').className = 'ficha-cargada visible';
 }
 
-// ── GUARDAR TURNO ──
+// ── FORM TURNO ────────────────────────────────────────────────────
 function toggleFormTurno() {
   formTurnoVisible = !formTurnoVisible;
   document.getElementById('form-turno').className = 'form-card' + (formTurnoVisible ? ' visible' : '');
@@ -630,15 +672,13 @@ function limpiarFormTurno() {
   document.getElementById('t-err').className = 'err';
   document.getElementById('campos-nuevopac').style.display     = 'none';
   document.getElementById('campos-pacexistente').style.display = 'none';
-  document.getElementById('ficha-cargada').className = 'ficha-cargada';
-  document.getElementById('suggestions').className   = 'suggestions';
+  document.getElementById('ficha-cargada').className   = 'ficha-cargada';
+  document.getElementById('suggestions').className     = 'suggestions';
   pvSeleccion = null; pacienteSeleccionadoKey = null;
   document.getElementById('pv-si').className = 'toggle-btn';
   document.getElementById('pv-no').className = 'toggle-btn';
-  // Reset tratamientos
   listaTratamientosForm = [];
   renderListaTratsForm();
-  // Reset pago anticipado
   setPagoAnt('no');
   setPagoAntMet('efectivo');
 }
