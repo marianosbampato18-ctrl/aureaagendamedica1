@@ -25,6 +25,8 @@ function _renderSidebarItems() {
   if (!els.nav) return;
   els.nav.innerHTML = '';
   MENU_ITEMS.forEach(function(it) {
+    // Ocultar ítems que el rol actual no puede ver
+    if (typeof usuarioPuede === 'function' && !usuarioPuede(it.key)) return;
     var li = document.createElement('li');
     li.setAttribute('role', 'none');
     var btn = document.createElement('button');
@@ -80,10 +82,12 @@ function initMenu() {
   _refreshSidebarUser();
   _syncActiveItem();
 
-  // Mantener item activo en sync cuando showPanel() es llamado desde otra parte
+  // Mantener item activo en sync + bloquear paneles no permitidos
   if (typeof showPanel === 'function' && !showPanel.__menuPatched) {
     var _orig = showPanel;
     window.showPanel = function(p) {
+      // Bloqueo silencioso: si el usuario no tiene permiso, no navega
+      if (typeof usuarioPuede === 'function' && !usuarioPuede(p)) return;
       var r = _orig.apply(this, arguments);
       try { _syncActiveItem(); } catch(e) {}
       try { _refreshSidebarUser(); } catch(e) {}

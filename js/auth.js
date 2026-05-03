@@ -7,9 +7,22 @@
 // ═══════════════════════════════════════════
 
 var USUARIOS = {
-  'marianosbampato18@gmail.com': { pass: 'admin1', rol: 'admin', nombre: 'Mariano' },
-  'doc.brunanara@gmail.com':     { pass: 'admin2', rol: 'admin', nombre: 'Dra. Bruna Nara' }
+  'marianosbampato18@gmail.com': { pass: 'admin1',     rol: 'admin',     nombre: 'Mariano'        },
+  'doc.brunanara@gmail.com':     { pass: 'admin2',     rol: 'admin',     nombre: 'Dra. Bruna Nara' },
+  'recepcion1':                  { pass: 'recepcion1', rol: 'recepcion', nombre: 'Recepción'       }
 };
+
+// Paneles permitidos por rol
+var PERMISOS = {
+  'admin':     ['agenda', 'fichas', 'caja', 'precios'],
+  'recepcion': ['agenda']
+};
+
+function usuarioPuede(panel) {
+  if (!usuarioActual) return false;
+  var permitidos = PERMISOS[usuarioActual.rol] || [];
+  return permitidos.indexOf(panel) !== -1;
+}
 var SESSION_KEY  = 'aurea_session';
 var SESSION_TTL  = 8 * 60 * 60 * 1000; // 8 horas
 var usuarioActual = null;
