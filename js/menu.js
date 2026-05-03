@@ -96,11 +96,12 @@ function initMenu() {
     window.showPanel.__menuPatched = true;
   }
 
-  // Refrescar usuario en el footer del sidebar después del login
+  // Re-renderizar sidebar después del login con los permisos del usuario real
   if (typeof _entrarApp === 'function' && !_entrarApp.__menuPatched) {
     var _origEntrar = _entrarApp;
     window._entrarApp = function() {
       var r = _origEntrar.apply(this, arguments);
+      try { _renderSidebarItems(); } catch(e) {}  // re-renderiza con rol correcto
       try { _refreshSidebarUser(); } catch(e) {}
       try { _syncActiveItem(); } catch(e) {}
       return r;

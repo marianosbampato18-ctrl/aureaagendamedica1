@@ -98,9 +98,15 @@ function _entrarApp(nombre) {
   if (document.getElementById('hero-user')) document.getElementById('hero-user').textContent = nombre;
   setSyncBar('loading', modoLocal ? '📱 Modo local' : 'Conectando…');
   iniciarListeners();
-  renderPrecios();
   renderTurnos();
   poblarSelectTratamientos();
+  // Solo admin renderiza e inicializa secciones restringidas
+  if (usuarioActual && usuarioActual.rol === 'admin') {
+    renderPrecios();
+  }
+  // Forzar panel de inicio según rol
+  var panelInicio = (usuarioActual && usuarioActual.rol === 'recepcion') ? 'agenda' : 'agenda';
+  try { showPanel(panelInicio); } catch(e) {}
   // Fix #15: verificar cierres incompletos al iniciar
   setTimeout(verificarCierresIncompletos, 3000);
 }
