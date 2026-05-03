@@ -804,11 +804,11 @@ body.menu-open{ overflow:hidden; }
 .aurea-sidebar{
   display:none; /* sólo visible ≥768px */
   position:fixed;
-  top:0;left:0;bottom:0;
+  top:0;right:0;bottom:0;
   width:232px;
   background:linear-gradient(180deg,#2E2419 0%,#1F1810 100%);
-  border-right:1px solid rgba(201,163,90,.15);
-  box-shadow:2px 0 24px rgba(0,0,0,.18);
+  border-left:1px solid rgba(201,163,90,.15);
+  box-shadow:-2px 0 24px rgba(0,0,0,.18);
   z-index:90;
   flex-direction:column;
   font-family:var(--font-body);
@@ -816,14 +816,14 @@ body.menu-open{ overflow:hidden; }
 }
 .aurea-sidebar::before{
   content:"";
-  position:absolute;top:-70px;right:-70px;
+  position:absolute;top:-70px;left:-70px;
   width:200px;height:200px;border-radius:50%;
   background:radial-gradient(circle,rgba(201,163,90,.14) 0%,transparent 70%);
   pointer-events:none;
 }
 .aurea-sidebar::after{
   content:"";
-  position:absolute;bottom:-50px;left:-30px;
+  position:absolute;bottom:-50px;right:-30px;
   width:140px;height:140px;border-radius:50%;
   background:radial-gradient(circle,rgba(201,163,90,.08) 0%,transparent 70%);
   pointer-events:none;
@@ -886,7 +886,7 @@ body.menu-open{ overflow:hidden; }
   display:flex;align-items:center;gap:14px;
   width:100%;
   min-height:46px;
-  padding:11px 14px 11px 13px;
+  padding:11px 13px 11px 14px;
   border:none;
   background:transparent;
   color:rgba(255,255,255,.72);
@@ -898,9 +898,9 @@ body.menu-open{ overflow:hidden; }
   text-align:left;
   cursor:pointer;
   border-radius:10px;
-  border-left:3px solid transparent;
+  border-right:3px solid transparent;
   -webkit-tap-highlight-color:transparent;
-  transition:background .2s ease, color .2s ease, border-left-color .2s ease;
+  transition:background .2s ease, color .2s ease, border-right-color .2s ease;
 }
 .aurea-sidebar-item .aurea-sidebar-item-icon{
   font-size:15px;
@@ -915,7 +915,7 @@ body.menu-open{ overflow:hidden; }
 .aurea-sidebar-item:hover{
   background:rgba(201,163,90,.08);
   color:var(--gold-light);
-  border-left-color:rgba(201,163,90,.55);
+  border-right-color:rgba(201,163,90,.55);
 }
 .aurea-sidebar-item:hover .aurea-sidebar-item-icon{
   background:rgba(201,163,90,.18);
@@ -924,7 +924,7 @@ body.menu-open{ overflow:hidden; }
 .aurea-sidebar-item.active{
   background:rgba(201,163,90,.18);
   color:var(--gold-light);
-  border-left-color:var(--gold);
+  border-right-color:var(--gold);
 }
 .aurea-sidebar-item.active .aurea-sidebar-item-icon{
   background:linear-gradient(135deg,var(--gold-light),var(--gold));
@@ -972,8 +972,8 @@ body.menu-open{ overflow:hidden; }
 /* ── Aplicación del sidebar / responsive ───────────────── */
 @media (min-width:768px){
   .aurea-sidebar{ display:flex; }
-  /* El contenido se corre a la derecha para dejar lugar al sidebar */
-  #app-screen{ padding-left:232px; }
+  /* El contenido se corre a la izquierda para dejar lugar al sidebar */
+  #app-screen{ padding-right:232px; }
   /* Branding del hero queda redundante con el sidebar — simplificamos */
   .hero-brand .brand-monogram-sm{ display:none; }
   .hero-brand-text .hero-eyebrow{ display:none; }
