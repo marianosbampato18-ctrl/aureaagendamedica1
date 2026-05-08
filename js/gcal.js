@@ -3,7 +3,7 @@
 // Sincronización unidireccional: Sistema → Google Calendar
 // ═══════════════════════════════════════════
 
-var GCAL_CLIENT_ID = '898433681770-fbifom7fkjs21dms4dmsajkqn5p2kp8q.apps.googleusercontent.com';
+var GCAL_CLIENT_ID = '597964526769-fva6hh7emdv234dkgt67jdtcvtp910du.apps.googleusercontent.com';
 var GCAL_SCOPE     = 'https://www.googleapis.com/auth/calendar.events';
 var GCAL_API       = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
 
