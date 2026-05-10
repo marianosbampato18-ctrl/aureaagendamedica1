@@ -103,22 +103,32 @@ function _gcalEventoDesde(turno) {
 
 // ── Crear evento en Google Calendar ───────────────────────
 function gcalCrearEvento(turnoKey, turno) {
-  if (!_gcalConectado || !_gcalToken) return;
+  if (!_gcalConectado || !_gcalToken) {
+    console.warn('GCal crear: no conectado', { conectado: _gcalConectado, token: !!_gcalToken });
+    return;
+  }
+  var evento = _gcalEventoDesde(turno);
+  console.log('GCal crear evento:', evento);
   fetch(GCAL_API, {
     method:  'POST',
     headers: {
       'Authorization': 'Bearer ' + _gcalToken,
       'Content-Type':  'application/json'
     },
-    body: JSON.stringify(_gcalEventoDesde(turno))
+    body: JSON.stringify(evento)
   })
   .then(function(r){ return r.json(); })
   .then(function(data){
+    console.log('GCal respuesta:', data);
     if (data.id && db) {
       db.ref('turnos/' + turnoKey + '/gcalEventId').set(data.id);
+      console.log('GCal evento creado con ID:', data.id);
+    } else if (data.error) {
+      console.error('GCal error:', data.error);
+      alert('Error Google Calendar: ' + (data.error.message || JSON.stringify(data.error)));
     }
   })
-  .catch(function(e){ console.warn('GCal crear:', e); });
+  .catch(function(e){ console.warn('GCal crear error:', e); });
 }
 
 // ── Actualizar evento existente ────────────────────────────
