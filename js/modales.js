@@ -100,22 +100,29 @@ function onEdTratSelected() {
   }
 }
 
+function _edMostrarTratErr(msg) {
+  var el = document.getElementById('ed-trat-err');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+}
+
 function edAgregarTratamiento() {
-  var err = document.getElementById('ed-turno-err');
   var selKey = document.getElementById('ed-trat-sel').value;
   var nombre = '', precio = 0, key = '';
   if (selKey === '__libre__') {
     nombre = (document.getElementById('ed-trat-libre').value || '').trim();
-    if (!nombre) { err.textContent='Ingresá el nombre del tratamiento.'; err.className='err visible'; return; }
-    precio = 0;
+    if (!nombre) { _edMostrarTratErr('Ingresá el nombre del tratamiento.'); return; }
+    precio = parseFloat(document.getElementById('ed-precio-edit').value) || 0;
     key = '__libre__';
   } else if (selKey && tratamientosData[selKey]) {
     var tr = tratamientosData[selKey];
     nombre = tr.nombre; precio = parseFloat(tr.precio) || 0; key = selKey;
   } else {
-    err.textContent='Seleccioná un tratamiento antes de agregar.'; err.className='err visible'; return;
+    _edMostrarTratErr('Seleccioná un tratamiento del listado y luego tocá + Agregar.');
+    return;
   }
-  err.className = 'err';
+  _edMostrarTratErr('');
   edListaTratamientos.push({ nombre: nombre, precio: precio, key: key });
   document.getElementById('ed-trat-sel').value = '';
   document.getElementById('ed-trat-libre-wrap').style.display = 'none';
