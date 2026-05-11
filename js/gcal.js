@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════
 // GCAL — Sincronización Google Calendar vía Apps Script
-// Backend permanente: corre con credenciales de la Dra. Bruna
-// Sin OAuth en el navegador — funciona desde cualquier dispositivo
+// Backend permanente con credenciales de la Dra. Bruna
+// Usa GET para evitar problemas de CORS — funciona desde cualquier dispositivo
 // ═══════════════════════════════════════════
 
 var GCAL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw_O5yjcKRh1n0cepHmI3pH1RUWo0MGnMoYSooUzH17tm6wd1ZuY2ORBmGifqbVYV_7/exec';
@@ -31,41 +31,25 @@ function _gcalPayload(turno) {
   };
 }
 
-// ── Llamada genérica al backend ────────────────────────────
-function _gcalPost(data, onSuccess) {
-  fetch(GCAL_SCRIPT_URL, {
-    method:  'POST',
-    mode:    'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify(data)
-  })
-  .then(function() {
-    if (onSuccess) onSuccess();
-  })
-  .catch(function(e){ console.warn('GCal sync error:', e); });
+// ── Llamada GET al backend (sin CORS issues) ───────────────
+function _gcalGet(data, onSuccess) {
+  var url = GCAL_SCRIPT_URL + '?d=' + encodeURIComponent(JSON.stringify(data));
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(resp){
+      if (onSuccess) onSuccess(resp);
+    })
+    .catch(function(e){ console.warn('GCal sync error:', e); });
 }
 
 // ── Crear evento ───────────────────────────────────────────
 function gcalCrearEvento(turnoKey, turno) {
   var payload = _gcalPayload(turno);
   payload.action = 'create';
-
-  // Usamos fetch con cors para poder leer el id devuelto
-  fetch(GCAL_SCRIPT_URL, {
-    method:  'POST',
-    mode:    'cors',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify(payload)
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data){
-    if (data && data.id && db) {
-      db.ref('turnos/' + turnoKey + '/gcalEventId').set(data.id);
+  _gcalGet(payload, function(resp) {
+    if (resp && resp.id && db) {
+      db.ref('turnos/' + turnoKey + '/gcalEventId').set(resp.id);
     }
-  })
-  .catch(function() {
-    // Si cors falla, intentar no-cors (el id no se recibirá pero el evento se crea)
-    _gcalPost(Object.assign({}, payload, {action: 'create'}), null);
   });
 }
 
@@ -78,16 +62,16 @@ function gcalActualizarEvento(turnoKey, turno) {
   var payload = _gcalPayload(turno);
   payload.action = 'update';
   payload.id     = turno.gcalEventId;
-  _gcalPost(payload, null);
+  _gcalGet(payload, null);
 }
 
 // ── Eliminar evento ────────────────────────────────────────
 function gcalEliminarEvento(turnoKey, turno) {
   if (!turno.gcalEventId) return;
-  _gcalPost({ action: 'delete', id: turno.gcalEventId }, null);
+  _gcalGet({ action: 'delete', id: turno.gcalEventId }, null);
 }
 
-// ── Funciones de UI (compatibilidad — el botón ya no es necesario) ──
+// ── Stubs de compatibilidad (botón eliminado) ──────────────
 function gcalConectar()    {}
 function gcalDesconectar() {}
 function gcalInit()        {}
