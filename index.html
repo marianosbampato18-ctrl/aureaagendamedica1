@@ -1662,17 +1662,24 @@ body.menu-open{ overflow:hidden; }
 
     <!-- TAB Turno -->
     <div class="edit-section" id="esec-turno">
-      <div class="field"><label>Tratamiento</label>
-        <select id="ed-trat-sel" onchange="onEdTratSelected()" style="width:100%;padding:13px 15px;font-size:16px;border:1px solid var(--border);border-radius:12px;background:var(--ivory);color:var(--brown);font-family:inherit;outline:none;-webkit-appearance:none;appearance:none">
-          <option value="">— Elegí un tratamiento —</option>
-        </select>
+      <div class="field"><label>Tratamientos</label>
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <div style="flex:1">
+            <select id="ed-trat-sel" onchange="onEdTratSelected()" style="width:100%;padding:13px 15px;font-size:16px;border:1px solid var(--border);border-radius:12px;background:var(--ivory);color:var(--brown);font-family:inherit;outline:none;-webkit-appearance:none;appearance:none">
+              <option value="">— Elegí un tratamiento —</option>
+            </select>
+            <div id="ed-trat-libre-wrap" style="display:none;margin-top:8px"><input type="text" id="ed-trat-libre" placeholder="Ej: Relleno de labios" style="width:100%;padding:13px 15px;font-size:16px;border:1px solid var(--border);border-radius:12px;background:var(--ivory);color:var(--brown);font-family:inherit;outline:none;box-sizing:border-box"/></div>
+            <div class="precio-auto" id="ed-precio-auto" style="margin-top:6px">
+              <span class="precio-auto-label">Precio del tratamiento</span>
+              <span class="precio-auto-valor" id="ed-precio-valor">$0</span>
+            </div>
+          </div>
+          <button type="button" onclick="edAgregarTratamiento()" style="flex-shrink:0;margin-top:2px;padding:13px 16px;border:1px solid var(--gold);border-radius:12px;background:var(--ivory);color:var(--gold-dark);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">+ Agregar</button>
+        </div>
+        <div id="ed-lista-trats" style="margin-top:8px"></div>
+        <div id="ed-total-display" style="display:none;margin-top:8px;text-align:right;font-size:14px;font-weight:700;color:var(--gold-dark)"></div>
       </div>
-      <div class="field" id="ed-trat-libre-wrap" style="display:none"><label>Nombre del tratamiento</label><input type="text" id="ed-trat-libre"/></div>
-      <div class="precio-auto" id="ed-precio-auto">
-        <span class="precio-auto-label">Precio del tratamiento</span>
-        <span class="precio-auto-valor" id="ed-precio-valor">$0</span>
-      </div>
-      <div class="field"><label>Precio (editable) $</label><input type="number" id="ed-precio-edit" inputmode="numeric"/></div>
+      <div class="field"><label>Precio total (editable) $</label><input type="number" id="ed-precio-edit" inputmode="numeric"/></div>
       <div class="field"><label>Fecha</label><input type="date" id="ed-fecha"/></div>
       <div class="field"><label>Hora</label>
         <div style="display:flex;gap:8px;align-items:center">

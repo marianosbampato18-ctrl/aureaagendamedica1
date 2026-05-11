@@ -1,6 +1,9 @@
 // ═══════════════════════════════════════════
 // MODALES — Edición de turno y pagos
 // ═══════════════════════════════════════════
+
+var edListaTratamientos = []; // lista temporal de tratamientos en el modal de edición
+
 function abrirModalEdit(turnoKey) {
   turnoEditKey = turnoKey;
   var t = turnosData[turnoKey];
@@ -26,20 +29,25 @@ function abrirModalEdit(turnoKey) {
   }
   document.getElementById('ed-pac-err').className = 'err';
 
-  // Tab turno
+  // Tab turno — cargar tratamientos existentes en la lista
   poblarSelectTratamientos();
-  if (t.tratamientoKey && tratamientosData[t.tratamientoKey]) {
-    document.getElementById('ed-trat-sel').value = t.tratamientoKey;
-    document.getElementById('ed-trat-libre-wrap').style.display = 'none';
-  } else {
-    document.getElementById('ed-trat-sel').value = '__libre__';
-    document.getElementById('ed-trat-libre-wrap').style.display = 'block';
-    document.getElementById('ed-trat-libre').value = t.tratamiento || '';
+  document.getElementById('ed-trat-sel').value = '';
+  document.getElementById('ed-trat-libre-wrap').style.display = 'none';
+  document.getElementById('ed-precio-auto').className = 'precio-auto';
+
+  // Cargar tratamientos previos del turno
+  edListaTratamientos = [];
+  if (t.tratamientos && Array.isArray(t.tratamientos) && t.tratamientos.length) {
+    edListaTratamientos = t.tratamientos.map(function(tr) {
+      return { nombre: tr.nombre || '', precio: parseFloat(tr.precio) || 0, key: tr.key || '__libre__' };
+    });
+  } else if (t.tratamiento) {
+    // backward compat: turno viejo con string tratamiento
+    edListaTratamientos = [{ nombre: t.tratamiento, precio: parseFloat(t.precio) || 0, key: t.tratamientoKey || '__libre__' }];
   }
-  var precio = parseFloat(t.precio) || 0;
-  document.getElementById('ed-precio-edit').value = precio || '';
-  document.getElementById('ed-precio-valor').textContent = '$' + precio.toLocaleString('es-AR');
-  document.getElementById('ed-precio-auto').className = 'precio-auto' + (precio?' visible':'');
+  edRenderListaTrats();
+
+  document.getElementById('ed-precio-edit').value = parseFloat(t.precio) || '';
   document.getElementById('ed-fecha').value = t.fecha || '';
   if (t.hora) {
     var partes = t.hora.split(':');
@@ -85,12 +93,64 @@ function onEdTratSelected() {
     var tr = tratamientosData[key];
     var pr = parseFloat(tr.precio) || 0;
     document.getElementById('ed-precio-valor').textContent = '$' + pr.toLocaleString('es-AR');
-    document.getElementById('ed-precio-edit').value = pr;
     precioBox.className = 'precio-auto visible';
   } else {
     libre.style.display = 'none';
     precioBox.className = 'precio-auto';
   }
+}
+
+function edAgregarTratamiento() {
+  var err = document.getElementById('ed-turno-err');
+  var selKey = document.getElementById('ed-trat-sel').value;
+  var nombre = '', precio = 0, key = '';
+  if (selKey === '__libre__') {
+    nombre = (document.getElementById('ed-trat-libre').value || '').trim();
+    if (!nombre) { err.textContent='Ingresá el nombre del tratamiento.'; err.className='err visible'; return; }
+    precio = 0;
+    key = '__libre__';
+  } else if (selKey && tratamientosData[selKey]) {
+    var tr = tratamientosData[selKey];
+    nombre = tr.nombre; precio = parseFloat(tr.precio) || 0; key = selKey;
+  } else {
+    err.textContent='Seleccioná un tratamiento antes de agregar.'; err.className='err visible'; return;
+  }
+  err.className = 'err';
+  edListaTratamientos.push({ nombre: nombre, precio: precio, key: key });
+  document.getElementById('ed-trat-sel').value = '';
+  document.getElementById('ed-trat-libre-wrap').style.display = 'none';
+  document.getElementById('ed-precio-auto').className = 'precio-auto';
+  edRenderListaTrats();
+}
+
+function edEliminarTratamiento(idx) {
+  edListaTratamientos.splice(idx, 1);
+  edRenderListaTrats();
+}
+
+function edRenderListaTrats() {
+  var lista = document.getElementById('ed-lista-trats');
+  var totalEl = document.getElementById('ed-total-display');
+  if (!lista) return;
+  if (!edListaTratamientos.length) {
+    lista.innerHTML = '';
+    if (totalEl) totalEl.style.display = 'none';
+    return;
+  }
+  var total = edListaTratamientos.reduce(function(s, t) { return s + t.precio; }, 0);
+  lista.innerHTML = edListaTratamientos.map(function(t, i) {
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--ivory);border:1px solid var(--border);border-radius:10px;margin-bottom:6px">' +
+      '<div><div style="font-size:14px;font-weight:600;color:var(--brown)">' + sanitize(t.nombre) + '</div>' +
+      (t.precio > 0 ? '<div style="font-size:12px;color:var(--gold-dark)">$' + t.precio.toLocaleString('es-AR') + '</div>' : '') + '</div>' +
+      '<button type="button" onclick="edEliminarTratamiento(' + i + ')" style="background:none;border:none;font-size:16px;color:var(--brown-soft);cursor:pointer;padding:4px 8px">✕</button>' +
+    '</div>';
+  }).join('');
+  if (totalEl) {
+    totalEl.textContent = edListaTratamientos.length > 1 ? 'Total: $' + total.toLocaleString('es-AR') : '';
+    totalEl.style.display = edListaTratamientos.length > 1 ? 'block' : 'none';
+  }
+  // Actualizar precio editable con el total
+  document.getElementById('ed-precio-edit').value = total || '';
 }
 
 function guardarEdicionPaciente() {
@@ -124,22 +184,19 @@ function guardarEdicionPaciente() {
 
 function guardarEdicionTurno() {
   if (!turnoEditKey) return;
-  var key = document.getElementById('ed-trat-sel').value;
-  var trat = '';
-  var tratKey = '';
-  // FIX #3: mantener tratamientos[] actualizado (backward compat con string tratamiento)
-  var tratamientosArray = [];
+  var err = document.getElementById('ed-turno-err');
 
-  if (key === '__libre__') {
-    trat = document.getElementById('ed-trat-libre').value.trim();
-    // Tratamiento libre: guardar como array de un elemento
-    tratamientosArray = [{ nombre: trat, precio: parseFloat(document.getElementById('ed-precio-edit').value) || 0, key: '__libre__' }];
-  } else if (key && tratamientosData[key]) {
-    var tr = tratamientosData[key];
-    trat = tr.nombre;
-    tratKey = key;
-    // Tratamiento del catálogo: guardar como array de un elemento
-    tratamientosArray = [{ nombre: tr.nombre, precio: parseFloat(tr.precio) || 0, key: key }];
+  if (!edListaTratamientos.length) {
+    err.textContent='Agregá al menos un tratamiento.'; err.className='err visible'; return;
+  }
+
+  var tratamientosArray = edListaTratamientos.slice();
+  // Nombre principal: todos los tratamientos unidos
+  var trat = tratamientosArray.map(function(t) { return t.nombre; }).join(' + ');
+  // Clave del primer tratamiento del catálogo (para compatibilidad)
+  var tratKey = '';
+  for (var i = 0; i < tratamientosArray.length; i++) {
+    if (tratamientosArray[i].key && tratamientosArray[i].key !== '__libre__') { tratKey = tratamientosArray[i].key; break; }
   }
 
   var precio = parseFloat(document.getElementById('ed-precio-edit').value) || 0;
@@ -148,8 +205,7 @@ function guardarEdicionTurno() {
   var mm     = document.getElementById('ed-mm').value;
   var hora   = (hh && mm) ? hh+':'+mm : '';
   var notas  = document.getElementById('ed-notas').value.trim();
-  var err    = document.getElementById('ed-turno-err');
-  if (!trat || !fecha || !hora) { err.textContent='Completá tratamiento, fecha y hora.'; err.className='err visible'; return; }
+  if (!fecha || !hora) { err.textContent='Completá fecha y hora.'; err.className='err visible'; return; }
   err.className = 'err';
   db.ref('turnos/'+turnoEditKey).update({
     tratamiento:  trat,
