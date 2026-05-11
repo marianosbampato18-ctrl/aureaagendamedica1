@@ -247,6 +247,7 @@ function eliminarTurno(key) {
   var t = turnosData[key];
   var detalle = t ? (t.paciente||'Turno') + ' · ' + (t.fecha||'') + ' ' + (t.hora||'') : 'Turno';
   if (!confirmarAccionCritica('turno', detalle)) return;
+  try { gcalEliminarEvento(key, t); } catch(e) {}
   softDelete(db.ref('turnos/'+key), 'Eliminado por usuario')
     .catch(function(e){ manejarErrorFirebase(e, 'Eliminar turno'); });
 }
