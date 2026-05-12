@@ -142,7 +142,7 @@ function renderPrecios() {
 
     items.forEach(function(item) {
       var precio = parseFloat(item.t.precio) || 0;
-      var cuotas = Math.round(precio * 1.4);
+      var cuotas = item.t.precioTarjeta ? parseFloat(item.t.precioTarjeta) : Math.round(precio * 1.4);
       secHTML += '<div class="precio-item">' +
         '<div>' +
           '<div class="precio-item-name">'+item.t.nombre+'</div>' +
