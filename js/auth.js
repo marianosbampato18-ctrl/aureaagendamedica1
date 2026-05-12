@@ -101,6 +101,10 @@ function _entrarApp(nombre) {
   renderPrecios();
   renderTurnos();
   poblarSelectTratamientos();
+  // Iniciar chat
+  var fab = document.getElementById('chat-fab');
+  if (fab) fab.style.display = 'flex';
+  if (typeof initChat === 'function') initChat();
   // Fix #15: verificar cierres incompletos al iniciar
   setTimeout(verificarCierresIncompletos, 3000);
 }
@@ -139,6 +143,11 @@ function logout() {
   document.getElementById('app-screen').style.display   = 'none';
   document.getElementById('login-email').value = '';
   document.getElementById('login-pass').value  = '';
+  var fab = document.getElementById('chat-fab');
+  if (fab) fab.style.display = 'none';
+  var panel = document.getElementById('chat-panel');
+  if (panel) panel.classList.remove('chat-open');
+  chatAbierto = false;
 }
 
 // ── Helper de roles (Fix #8) ──────────────────────────────────

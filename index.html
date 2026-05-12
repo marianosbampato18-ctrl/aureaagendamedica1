@@ -193,6 +193,27 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
 .hist-actions{display:flex;justify-content:flex-end;margin-top:10px;padding-top:8px;border-top:1px solid var(--ivory)}
 .auto-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;margin-left:6px;vertical-align:middle}
 
+/* ── CHAT INTERNO ── */
+.chat-fab{position:fixed;bottom:24px;right:24px;z-index:300;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--gold-dark),var(--gold));border:none;cursor:pointer;box-shadow:0 4px 20px rgba(201,163,90,.45);display:flex;align-items:center;justify-content:center;font-size:22px;-webkit-tap-highlight-color:transparent;transition:transform .15s,box-shadow .15s}
+.chat-fab:active{transform:scale(.93)}
+.chat-badge{position:absolute;top:-4px;right:-4px;background:#E74C3C;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:700;display:none;align-items:center;justify-content:center;border:2px solid #fff;line-height:1}
+.chat-panel{position:fixed;bottom:88px;right:24px;z-index:299;width:340px;max-width:calc(100vw - 48px);height:480px;max-height:calc(100vh - 120px);background:linear-gradient(160deg,#2A1F14 0%,#1A130C 100%);border-radius:24px;box-shadow:0 16px 48px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(201,163,90,.25);transform:scale(.9) translateY(20px);opacity:0;pointer-events:none;transition:transform .22s cubic-bezier(.34,1.56,.64,1),opacity .18s}
+.chat-panel.chat-open{transform:scale(1) translateY(0);opacity:1;pointer-events:all}
+.chat-header{padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
+.chat-header-title{font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--gold-light);letter-spacing:.22em;text-transform:uppercase}
+.chat-header-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px}
+.chat-close{background:rgba(255,255,255,.08);border:none;border-radius:50%;width:28px;height:28px;color:rgba(255,255,255,.6);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+.chat-lista{flex:1;overflow-y:auto;padding:12px 10px;-webkit-overflow-scrolling:touch}
+.chat-lista::-webkit-scrollbar{width:3px}
+.chat-lista::-webkit-scrollbar-track{background:transparent}
+.chat-lista::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px}
+.chat-input-row{padding:10px 12px;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;background:rgba(0,0,0,.15)}
+.chat-input{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:10px 14px;font-size:14px;color:#fff;font-family:inherit;outline:none;resize:none;max-height:80px;line-height:1.4;-webkit-appearance:none}
+.chat-input::placeholder{color:rgba(255,255,255,.3)}
+.chat-input:focus{border-color:rgba(201,163,90,.5);background:rgba(255,255,255,.1)}
+.chat-send{background:linear-gradient(135deg,var(--gold-dark),var(--gold));border:none;border-radius:50%;width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:opacity .15s}
+.chat-send:active{opacity:.8}
+
 /* MODAL COBRO */
 .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(59,51,43,.55);z-index:200;align-items:flex-end;justify-content:center}
 .modal-overlay.visible{display:flex}
@@ -1639,6 +1660,27 @@ body.menu-open{ overflow:hidden; }
   </div>
 </div>
 
+<!-- CHAT FLOTANTE -->
+<button class="chat-fab" id="chat-fab" onclick="toggleChat()" style="display:none" title="Chat interno">
+  💬
+  <div class="chat-badge" id="chat-badge"></div>
+</button>
+
+<div class="chat-panel" id="chat-panel">
+  <div class="chat-header">
+    <div>
+      <div class="chat-header-title">Chat interno</div>
+      <div class="chat-header-sub">Áurea Clinic · equipo</div>
+    </div>
+    <button class="chat-close" onclick="toggleChat()">✕</button>
+  </div>
+  <div class="chat-lista" id="chat-lista"></div>
+  <div class="chat-input-row">
+    <textarea class="chat-input" id="chat-input" placeholder="Escribí un mensaje…" rows="1" onkeydown="chatKeyDown(event)"></textarea>
+    <button class="chat-send" onclick="chatEnviar()">➤</button>
+  </div>
+</div>
+
 <!-- MODAL COBRO -->
 <div class="modal-overlay" id="modal-cobro">
   <div class="modal-sheet">
@@ -1820,6 +1862,7 @@ body.menu-open{ overflow:hidden; }
 <script src="js/gcal.js"></script>        <!-- Google Calendar sync -->
 <script src="js/archivos.js"></script>    <!-- Módulo archivos clínicos (Firebase DB + Canvas) -->
 <script src="js/reportes.js"></script>   <!-- Panel de reportes mensuales (solo admins) -->
+<script src="js/chat.js"></script>       <!-- Chat interno entre usuarios -->
 
 </body>
 </html>
