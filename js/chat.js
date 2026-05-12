@@ -6,8 +6,21 @@ var chatAbierto    = false;
 var chatData       = {};
 var chatUltimoVisto = parseInt(localStorage.getItem('chat_ultimo_visto') || '0');
 
+// ── Limpiar mensajes con más de 24h ──────────────────────────
+function _chatLimpiarViejos() {
+  var corte = Date.now() - 24 * 60 * 60 * 1000;
+  db.ref('chat').orderByChild('ts').endAt(corte).once('value', function(snap) {
+    if (!snap.exists()) return;
+    var updates = {};
+    snap.forEach(function(child) { updates[child.key] = null; });
+    db.ref('chat').update(updates);
+  });
+}
+
 // ── Iniciar listener de Firebase ─────────────────────────────
 function initChat() {
+  _chatLimpiarViejos();
+
   var ref = db.ref('chat').orderByChild('ts').limitToLast(100);
   ref.on('child_added', function(snap) {
     chatData[snap.key] = snap.val();
@@ -16,6 +29,11 @@ function initChat() {
   });
   ref.on('child_changed', function(snap) {
     chatData[snap.key] = snap.val();
+    if (chatAbierto) _chatRender();
+  });
+  ref.on('child_removed', function(snap) {
+    delete chatData[snap.key];
+    _chatActualizarBadge();
     if (chatAbierto) _chatRender();
   });
 }
