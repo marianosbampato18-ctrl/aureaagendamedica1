@@ -11,7 +11,7 @@ const os    = require('os');
 const XLSX  = require('xlsx');
 
 const DB_HOST  = 'agenda-bruna-nara-default-rtdb.firebaseio.com';
-const BASE_DIR = path.join(__dirname); // carpeta backup/
+const BASE_DIR = process.env.BACKUP_DEST || path.join(__dirname); // carpeta backup/
 
 // ── Colores para la terminal ─────────────────────────────────────
 const C = {
@@ -396,7 +396,9 @@ async function main() {
   let pacientesConFotos = 0;
 
   Object.values(pacientesData).forEach((paciente) => {
-    const nombreCarpetaPac = sanitizarNombreArchivo(paciente.nombre);
+    const nombreCarpetaPac = sanitizarNombreArchivo(
+      [paciente.apellido, paciente.nombre].filter(Boolean).join('_') || paciente.nombre || 'Sin_Nombre'
+    );
     const carpetaPaciente  = path.join(carpetaFotos, nombreCarpetaPac);
     const n = guardarFotosPaciente(paciente, carpetaPaciente);
     if (n > 0) {

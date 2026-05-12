@@ -1,0 +1,13 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "turnos":       { ".read": true, ".write": true, ".indexOn": ["fecha"] },
+    "pacientes":    { ".read": true, ".write": true },
+    "ventas":       { ".read": true, ".write": true, ".indexOn": ["fecha"] },
+    "pagos":        { ".read": true, ".write": true, ".indexOn": ["fecha"] },
+    "cierres":      { ".read": true, ".write": true, ".indexOn": ["timestamp"] },
+    "tratamientos": { ".read": true, ".write": true },
+    "chat":         { ".read": true, ".write": true, ".indexOn": ["ts"] }
+  }
+}
