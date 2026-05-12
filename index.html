@@ -1306,8 +1306,8 @@ body.menu-open{ overflow:hidden; }
           <button type="button" class="cal-today-btn" onclick="calGoToday()">Hoy</button>
           <div class="cal-view-toggle">
             <button type="button" class="cal-view-btn" id="cal-btn-dia" onclick="calSetView('dia')">Día</button>
-            <button type="button" class="cal-view-btn" id="cal-btn-sem" onclick="calSetView('semana')">Semana</button>
-            <button type="button" class="cal-view-btn active" id="cal-btn-mes" onclick="calSetView('mes')">Mes</button>
+            <button type="button" class="cal-view-btn active" id="cal-btn-sem" onclick="calSetView('semana')">Semana</button>
+            <button type="button" class="cal-view-btn" id="cal-btn-mes" onclick="calSetView('mes')">Mes</button>
           </div>
         </div>
         <!-- Cabecera días (día/semana) -->
@@ -1413,6 +1413,26 @@ body.menu-open{ overflow:hidden; }
           <button type="button" class="btn-save" id="btn-save-hist" onclick="guardarHistorial()">Guardar entrada</button>
         </div>
         <div id="lista-historial"><div class="empty"><div class="empty-icon">📋</div>Sin entradas aún</div></div>
+
+        <!-- ── HISTORIAL DE PAGOS ── -->
+        <div style="margin-top:24px">
+          <div class="section-label" style="margin-bottom:12px">💰 Historial de pagos</div>
+          <div id="ficha-pagos-resumen" style="display:none;background:var(--white);border-radius:16px;padding:14px 16px;margin-bottom:12px;border:1px solid var(--border);box-shadow:0 1px 8px rgba(59,51,43,.05)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <div>
+                <div style="font-size:10px;font-weight:700;color:var(--gold-dark);letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px">Total facturado</div>
+                <div style="font-size:26px;font-weight:800;color:var(--brown)" id="fp-total-facturado">$0</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:10px;font-weight:700;color:var(--gold-dark);letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px">Total cobrado</div>
+                <div style="font-size:26px;font-weight:800;color:#3D6B10" id="fp-total-cobrado">$0</div>
+              </div>
+            </div>
+            <div style="height:1px;background:var(--ivory);margin-bottom:10px"></div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap" id="fp-metodos"></div>
+          </div>
+          <div id="ficha-pagos-lista"></div>
+        </div>
 
         <!-- ── ARCHIVOS CLÍNICOS ── -->
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;margin-top:24px">
@@ -1791,6 +1811,7 @@ body.menu-open{ overflow:hidden; }
 <script src="js/precios.js"></script>     <!-- Tratamientos y precios -->
 <script src="js/modales.js"></script>     <!-- Modales de edición -->
 <script src="js/menu.js"></script>        <!-- Navegación sidebar -->
+<script src="js/cal.js"></script>          <!-- Vista calendario día/semana/mes -->
 <script src="js/gcal.js"></script>        <!-- Google Calendar sync -->
 <script src="js/archivos.js"></script>    <!-- Módulo archivos clínicos (Firebase DB + Canvas) -->
 

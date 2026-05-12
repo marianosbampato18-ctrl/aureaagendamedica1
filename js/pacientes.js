@@ -98,6 +98,7 @@ function abrirFichaKey(key) {
   document.getElementById('ficha-detalle').style.display='block';
   renderHistorial();
   renderTratPac();
+  renderFichaPagos(key);
   showPanel('fichas');
 }
 
@@ -357,6 +358,120 @@ function setPagoAnt(tipo) {
   } else if (tipo === 'parcial') {
     document.getElementById('pa-monto').value = '';
   }
+}
+
+// ═══════════════════════════════════════════════════════
+// ── HISTORIAL DE PAGOS DEL PACIENTE ──
+// ═══════════════════════════════════════════════════════
+function renderFichaPagos(pacKey) {
+  var lista    = document.getElementById('ficha-pagos-lista');
+  var resumen  = document.getElementById('ficha-pagos-resumen');
+  if (!lista || !resumen) return;
+
+  // Recopilar turnos del paciente
+  var turnosPac = Object.keys(turnosData).filter(function(k) {
+    return !turnosData[k].eliminado && turnosData[k].pacienteKey === pacKey;
+  });
+
+  // Recopilar pagos asociados a esos turnos
+  var pagosDelPac = [];
+  Object.keys(pagosData||{}).forEach(function(pk) {
+    var pago = pagosData[pk];
+    if (!pago || pago.eliminado) return;
+    if (turnosPac.indexOf(pago.turnoId) !== -1 || pago.pacienteId === pacKey) {
+      pagosDelPac.push(Object.assign({}, pago, { _key: pk }));
+    }
+  });
+
+  // Calcular totales facturados (desde turnos)
+  var totalFacturado = 0;
+  turnosPac.forEach(function(k) {
+    totalFacturado += parseFloat(turnosData[k].precio) || 0;
+  });
+
+  // Calcular totales cobrados y por método
+  var totalCobrado = 0;
+  var porMetodo = {};
+  pagosDelPac.forEach(function(p) {
+    var m = parseFloat(p.monto) || 0;
+    totalCobrado += m;
+    var met = p.metodo || 'efectivo';
+    porMetodo[met] = (porMetodo[met] || 0) + m;
+  });
+
+  if (!pagosDelPac.length && !turnosPac.length) {
+    resumen.style.display = 'none';
+    lista.innerHTML = '<div class="empty"><div class="empty-icon">💰</div>Sin pagos registrados</div>';
+    return;
+  }
+
+  // Resumen
+  resumen.style.display = 'block';
+  document.getElementById('fp-total-facturado').textContent = '$' + totalFacturado.toLocaleString('es-AR');
+  document.getElementById('fp-total-cobrado').textContent   = '$' + totalCobrado.toLocaleString('es-AR');
+
+  var METODO_LABEL = { efectivo:'💵 Efectivo', transferencia:'📲 Transfer.', tarjeta:'💳 Tarjeta', mercadopago:'💸 Merc. Pago', qr:'📱 QR' };
+  document.getElementById('fp-metodos').innerHTML = Object.keys(porMetodo).map(function(met) {
+    return '<div style="font-size:13px;color:var(--brown-mid)">' +
+      '<span style="font-weight:700;color:var(--brown)">' + (METODO_LABEL[met]||met) + '</span>' +
+      '&nbsp; $' + porMetodo[met].toLocaleString('es-AR') + '</div>';
+  }).join('');
+
+  // Lista detallada por turno
+  if (!turnosPac.length) {
+    lista.innerHTML = '';
+    return;
+  }
+
+  // Agrupar pagos por turno
+  var pagosPorTurno = {};
+  pagosDelPac.forEach(function(p) {
+    var tid = p.turnoId || '__sin__';
+    if (!pagosPorTurno[tid]) pagosPorTurno[tid] = [];
+    pagosPorTurno[tid].push(p);
+  });
+
+  // Ordenar turnos por fecha desc
+  var turnosOrdenados = turnosPac.slice().sort(function(a,b) {
+    return ((turnosData[b].fecha||'')+' '+(turnosData[b].hora||'')).localeCompare((turnosData[a].fecha||'')+' '+(turnosData[a].hora||''));
+  });
+
+  lista.innerHTML = turnosOrdenados.map(function(tk) {
+    var t = turnosData[tk];
+    var pf = parseFecha(t.fecha||'');
+    var fechaTxt = t.fecha ? (pf.d+'/'+String(pf.m+1).padStart(2,'0')+'/'+pf.y) : '—';
+    var precioTurno = parseFloat(t.precio) || 0;
+    var pagosT = pagosPorTurno[tk] || [];
+    var cobradoT = pagosT.reduce(function(s,p){ return s+(parseFloat(p.monto)||0); }, 0);
+    var restaT = Math.max(precioTurno - cobradoT, 0);
+
+    var estadoPago = precioTurno === 0 ? '' :
+      cobradoT === 0 ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#FDF0EE;color:#A03020;border:1px solid #F0C0B8">Sin pagar</span>' :
+      restaT === 0   ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#EAF3E6;color:#3D6B10;border:1px solid #C8E0B0">Pagado</span>' :
+                       '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#FFF8E6;color:#9A7020;border:1px solid #E8C96A">Seña</span>';
+
+    var pagosHtml = pagosT.length ? pagosT.map(function(p) {
+      var met = METODO_LABEL[p.metodo] || p.metodo || '';
+      return '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--brown-mid);padding:4px 0;border-top:1px solid var(--ivory)">' +
+        '<span>' + met + (p.anticipado ? ' <span style="font-size:10px;color:var(--gold-dark)">(anticipado)</span>' : '') + '</span>' +
+        '<span style="font-weight:700;color:var(--brown)">$' + parseFloat(p.monto).toLocaleString('es-AR') + '</span>' +
+        '</div>';
+    }).join('') : '';
+
+    return '<div style="background:var(--white);border-radius:16px;padding:14px 16px;margin-bottom:10px;border:1px solid var(--border);box-shadow:0 1px 8px rgba(59,51,43,.05)">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">' +
+        '<div>' +
+          '<div style="font-size:13px;font-weight:700;color:var(--brown)">'+sanitize(t.tratamiento||'Consulta')+'</div>' +
+          '<div style="font-size:11px;color:var(--brown-soft);margin-top:2px">'+fechaTxt+(t.hora?' · '+t.hora+' hs':'')+'</div>' +
+        '</div>' +
+        '<div style="text-align:right">' +
+          (precioTurno>0?'<div style="font-size:16px;font-weight:800;color:var(--brown)">$'+precioTurno.toLocaleString('es-AR')+'</div>':'') +
+          estadoPago +
+        '</div>' +
+      '</div>' +
+      pagosHtml +
+    '</div>';
+  }).join('');
 }
 
 function setPagoAntMet(m) {
