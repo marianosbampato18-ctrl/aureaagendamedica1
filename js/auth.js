@@ -14,7 +14,7 @@ var USUARIOS = {
 
 // Paneles permitidos por rol
 var PERMISOS = {
-  'admin':     ['agenda', 'fichas', 'caja', 'precios'],
+  'admin':     ['agenda', 'fichas', 'caja', 'precios', 'reportes'],
   'recepcion': ['agenda']
 };
 

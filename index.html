@@ -1631,6 +1631,11 @@ body.menu-open{ overflow:hidden; }
       <button type="button" onclick="cargarTratamientosPorDefecto()" style="background:none;border:1px dashed var(--gold);border-radius:12px;padding:12px;width:100%;color:var(--gold-dark);font-size:13px;font-weight:600;cursor:pointer;margin-top:12px;font-family:inherit;-webkit-tap-highlight-color:transparent">⬇ Cargar lista de precios Áurea Clinic</button>
     </div>
 
+    <!-- PANEL REPORTES (solo admins) -->
+    <div class="panel" id="panel-reportes">
+      <div id="rep-contenido"></div>
+    </div>
+
   </div>
 </div>
 
@@ -1814,6 +1819,7 @@ body.menu-open{ overflow:hidden; }
 <script src="js/cal.js"></script>          <!-- Vista calendario día/semana/mes -->
 <script src="js/gcal.js"></script>        <!-- Google Calendar sync -->
 <script src="js/archivos.js"></script>    <!-- Módulo archivos clínicos (Firebase DB + Canvas) -->
+<script src="js/reportes.js"></script>   <!-- Panel de reportes mensuales (solo admins) -->
 
 </body>
 </html>

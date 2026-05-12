@@ -4,10 +4,11 @@
 // ═══════════════════════════════════════════
 
 var MENU_ITEMS = [
-  { key: 'agenda',  label: 'Turnos',             icon: '📅' },
-  { key: 'fichas',  label: 'Historias Clínicas', icon: '👤' },
-  { key: 'caja',    label: 'Caja',               icon: '💰' },
-  { key: 'precios', label: 'Precios',            icon: '💎' }
+  { key: 'agenda',   label: 'Turnos',             icon: '📅' },
+  { key: 'fichas',   label: 'Historias Clínicas', icon: '👤' },
+  { key: 'caja',     label: 'Caja',               icon: '💰' },
+  { key: 'precios',  label: 'Precios',            icon: '💎' },
+  { key: 'reportes', label: 'Reportes',           icon: '📊' }
 ];
 
 var _menuInitialized = false;
