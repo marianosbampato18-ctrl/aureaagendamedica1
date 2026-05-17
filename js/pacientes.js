@@ -46,6 +46,25 @@ function guardarPaciente() {
   });
 }
 
+// ── Delegación de click en pac-cards (más robusto que onclick inline) ─
+var _pacDelegacionActiva = false;
+function _setupPacCardDelegacion() {
+  if (_pacDelegacionActiva) return;
+  var lista = document.getElementById('lista-pacientes');
+  if (!lista) return;
+  lista.addEventListener('click', function(e) {
+    var el = e.target;
+    while (el && el !== lista) {
+      if (el.classList && el.classList.contains('pac-card')) {
+        var key = el.getAttribute('data-key');
+        if (key) { abrirFichaKey(key); return; }
+      }
+      el = el.parentElement;
+    }
+  });
+  _pacDelegacionActiva = true;
+}
+
 function filtrarFichas(query) {
   var q = (query || '').toLowerCase().trim();
   var keys = Object.keys(pacientesData);
@@ -59,6 +78,7 @@ function filtrarFichas(query) {
     });
   }
   var lista = document.getElementById('lista-pacientes');
+  _setupPacCardDelegacion();
   if (!keys.length) {
     lista.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div>No se encontraron pacientes</div>';
     return;
@@ -68,7 +88,7 @@ function filtrarFichas(query) {
     var p = pacientesData[key];
     var hc = p.historial ? Object.keys(p.historial).length : 0;
     var idBadge = p.pacienteId ? '<span style="font-size:10px;font-weight:700;color:var(--gold-dark);background:#FDF8EE;border:1px solid var(--gold);border-radius:20px;padding:2px 8px;margin-left:6px">#'+sanitize(p.pacienteId)+'</span>' : '';
-    return '<div class="pac-card" id="pac-card-'+key+'" onclick="abrirFichaKey(\''+key+'\')">' +
+    return '<div class="pac-card" id="pac-card-'+key+'" data-key="'+key+'">' +
       '<div class="pac-card-top"><div>' +
         '<div class="pac-card-name">'+sanitize(p.nombre)+idBadge+'</div>' +
         '<div class="pac-card-sub">'+(p.telefono?'📞 '+sanitize(p.telefono):'')+(p.dni?' · 🪪 '+sanitize(p.dni):'')+(p.email?' · ✉ '+sanitize(p.email):'')+'</div>' +
@@ -84,25 +104,36 @@ function renderPacientes() {
   filtrarFichas(q);
 }
 
+// Función interna directa — no depende de monkey-patches externos
+function _abrirFichaDirecto(key) {
+  try {
+    if (!pacientesData[key]) return;
+    fichaActualKey=key;
+    var p=pacientesData[key];
+    auditLog('ficha_vista', p.nombre || key);
+    document.getElementById('fd-nombre').textContent=p.nombre;
+    var idEl = document.getElementById('fd-id');
+    if (p.pacienteId) { idEl.textContent='#'+p.pacienteId; idEl.style.display='inline-block'; }
+    else { idEl.style.display='none'; }
+    document.getElementById('fd-tel').textContent=p.telefono?'📞 '+p.telefono:'';
+    document.getElementById('fd-dni').textContent=p.dni?'🪪 DNI '+p.dni:'';
+    document.getElementById('fd-mail').textContent=p.email?'✉ '+p.email:'';
+    document.getElementById('fd-notas').textContent=p.notas||'';
+    document.getElementById('fichas-lista').style.display='none';
+    document.getElementById('ficha-detalle').style.display='block';
+    renderHistorial();
+    renderTratPac();
+    renderFichaPagos(key);
+    // Llamar showPanel sin bloqueo de permisos (ya estamos en fichas)
+    var panEl = document.getElementById('panel-fichas');
+    if (panEl && !panEl.classList.contains('active')) showPanel('fichas');
+  } catch(e) {
+    console.error('[Fichas] Error al abrir ficha:', e);
+  }
+}
+
 function abrirFichaKey(key) {
-  if (!pacientesData[key]) return;
-  fichaActualKey=key;
-  var p=pacientesData[key];
-  auditLog('ficha_vista', p.nombre || key);
-  document.getElementById('fd-nombre').textContent=p.nombre;
-  var idEl = document.getElementById('fd-id');
-  if (p.pacienteId) { idEl.textContent='#'+p.pacienteId; idEl.style.display='inline-block'; }
-  else { idEl.style.display='none'; }
-  document.getElementById('fd-tel').textContent=p.telefono?'📞 '+p.telefono:'';
-  document.getElementById('fd-dni').textContent=p.dni?'🪪 DNI '+p.dni:'';
-  document.getElementById('fd-mail').textContent=p.email?'✉ '+p.email:'';
-  document.getElementById('fd-notas').textContent=p.notas||'';
-  document.getElementById('fichas-lista').style.display='none';
-  document.getElementById('ficha-detalle').style.display='block';
-  renderHistorial();
-  renderTratPac();
-  renderFichaPagos(key);
-  showPanel('fichas');
+  _abrirFichaDirecto(key);
 }
 
 function cerrarFicha() {
