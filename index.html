@@ -496,9 +496,9 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
 .precio-item {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
-  padding: 10px 0;
+  padding: 11px 0;
   border-bottom: 1px solid rgba(184,151,106,.08);
 }
 .precio-item:last-child { border-bottom: none; }
@@ -555,6 +555,11 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
   display: flex;
   gap: 4px;
   margin-top: 6px;
+  opacity: 0;
+  transition: opacity .18s ease;
+}
+.precio-item:hover .precio-item-actions {
+  opacity: 1;
 }
 .precio-footer-note {
   background: var(--brown);
