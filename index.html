@@ -6,6 +6,20 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Dra. Bruna Nara"/>
+<!-- Content Security Policy: limita de dónde se pueden cargar scripts, estilos y conexiones -->
+<meta http-equiv="Content-Security-Policy"
+  content="default-src 'self';
+           script-src 'self' https://www.gstatic.com https://apis.google.com;
+           style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+           font-src https://fonts.gstatic.com;
+           img-src 'self' data: blob:;
+           connect-src 'self'
+             https://*.firebaseio.com
+             https://*.googleapis.com
+             https://securetoken.googleapis.com
+             wss://*.firebaseio.com;
+           frame-src 'none';
+           object-src 'none';"/>
 <title>Dra. Bruna Nara · Agenda</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,18 +27,19 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  /* ÁUREA CLINIC — paleta de marca */
-  --cream:#FAF6EC;            /* marfil */
-  --ivory:#F1E9D5;            /* arena */
+  /* ÁUREA CLINIC — paleta de marca (actualizada al manual) */
+  --cream:#F2EBD9;            /* beige crema del manual */
+  --ivory:#EAE0CE;            /* arena cálida */
   --gold:#C9A35A;             /* dorado signature */
-  --gold-light:#E0BE7E;       /* dorado claro / brillo */
-  --gold-dark:#8C6F2F;        /* dorado oscuro / bronce */
-  --brown:#2A2118;             /* negro cálido marca */
-  --brown-mid:#5C4A3A;
-  --brown-soft:#8A7763;
+  --gold-light:#DDB96A;       /* dorado claro / brillo */
+  --gold-dark:#9A7B1E;        /* dorado oscuro — sin marrón */
+  --brown:#100E0B;            /* negro profundo marca */
+  --brown-mid:#3A2E22;        /* oscuro intermedio */
+  --brown-soft:#8A7A62;       /* gris dorado suave */
   --white:#FFFFFF;
-  --border:#D9C9B0;
-  --taupe:#D9C9B0;
+  --border:#C8B890;
+  --taupe:#C8B890;
+  --deep:#08070A;             /* negro absoluto para sidebar/hero */
   --font-display:'Cinzel', 'Trajan Pro', 'Playfair Display', Georgia, serif;
   --font-body:'Montserrat','Helvetica Neue','SF Pro Text',Arial,sans-serif;
 }
@@ -33,16 +48,16 @@ body{font-family:var(--font-body);-webkit-font-smoothing:antialiased;background:
 /* MARCA — logo lockup */
 .brand-monogram{width:84px;height:auto;display:block;margin:0 auto 14px;filter:drop-shadow(0 4px 14px rgba(201,163,90,.35))}
 .brand-monogram-sm{width:38px;height:auto;display:block;filter:drop-shadow(0 2px 6px rgba(201,163,90,.35))}
-.brand-wordmark{font-family:var(--font-display);font-weight:600;letter-spacing:.32em;color:var(--gold-light);background:linear-gradient(180deg,#F2D58F 0%,#C9A35A 55%,#8C6F2F 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-align:center;line-height:1;text-transform:uppercase}
+.brand-wordmark{font-family:var(--font-display);font-weight:600;letter-spacing:.32em;color:var(--gold-light);background:linear-gradient(180deg,#F0D080 0%,#C9A35A 50%,#9A7B1E 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-align:center;line-height:1;text-transform:uppercase}
 .brand-clinic{font-family:var(--font-display);font-weight:500;letter-spacing:.42em;color:var(--gold);text-align:center;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:14px}
 .brand-clinic::before,.brand-clinic::after{content:"";flex:0 0 32px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.7}
 .brand-tagline{font-family:var(--font-body);font-weight:300;letter-spacing:.32em;text-transform:uppercase;text-align:center;color:rgba(255,255,255,.55)}
 
 /* LOGIN */
-#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:36px 24px;background:radial-gradient(circle at 50% 0%, #2E2419 0%, #1A130C 55%, #0E0A05 100%)}
+#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:36px 24px;background:radial-gradient(ellipse at 50% -10%, #1A1408 0%, #0A0806 50%, #050404 100%)}
 #app-screen{display:none}
 .login-logo{font-family:var(--font-body);font-size:10px;font-weight:400;color:var(--gold-light);letter-spacing:.34em;text-transform:uppercase;margin-bottom:6px;opacity:.85}
-.login-title{font-family:var(--font-display);font-size:34px;font-weight:600;letter-spacing:.32em;text-align:center;line-height:1;margin-bottom:6px;background:linear-gradient(180deg,#F2D58F 0%,#C9A35A 55%,#8C6F2F 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-transform:uppercase}
+.login-title{font-family:var(--font-display);font-size:34px;font-weight:600;letter-spacing:.32em;text-align:center;line-height:1;margin-bottom:6px;background:linear-gradient(180deg,#F0D080 0%,#C9A35A 50%,#9A7B1E 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-transform:uppercase}
 .login-clinic{font-family:var(--font-display);font-size:11px;font-weight:500;letter-spacing:.5em;color:var(--gold);text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:14px;margin-top:10px;margin-bottom:8px}
 .login-clinic::before,.login-clinic::after{content:"";flex:0 0 26px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.7}
 .login-sub{font-family:var(--font-body);font-size:11px;font-weight:300;color:rgba(255,255,255,.55);text-align:center;margin-bottom:34px;letter-spacing:.28em;text-transform:uppercase}
@@ -51,14 +66,14 @@ body{font-family:var(--font-body);-webkit-font-smoothing:antialiased;background:
 .login-field input{width:100%;padding:14px 18px;font-size:16px;border:1px solid rgba(201,163,90,.35);border-radius:14px;background:rgba(255,255,255,.05);color:var(--white);font-family:var(--font-body);outline:none;-webkit-appearance:none;letter-spacing:.02em}
 .login-field input::placeholder{color:rgba(255,255,255,.35);letter-spacing:.04em}
 .login-field input:focus{border-color:var(--gold);background:rgba(255,255,255,.1);box-shadow:0 0 0 3px rgba(201,163,90,.15)}
-.btn-ingresar{width:100%;max-width:320px;background:linear-gradient(135deg,#8C6F2F 0%,#C9A35A 50%,#E0BE7E 100%);color:#1A130C;border:none;border-radius:14px;padding:16px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-display);letter-spacing:.32em;text-transform:uppercase;box-shadow:0 6px 24px rgba(201,163,90,.32);min-height:52px;-webkit-tap-highlight-color:transparent;transition:opacity .15s,transform .15s}
+.btn-ingresar{width:100%;max-width:320px;background:linear-gradient(135deg,#9A7B1E 0%,#C9A35A 50%,#DDB96A 100%);color:#08070A;border:none;border-radius:14px;padding:16px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-display);letter-spacing:.32em;text-transform:uppercase;box-shadow:0 6px 28px rgba(180,140,50,.35);min-height:52px;-webkit-tap-highlight-color:transparent;transition:opacity .15s,transform .15s}
 .btn-ingresar:active{opacity:.85}
 .login-err{font-size:13px;color:#FF8A80;margin-top:10px;text-align:center;display:none}
 .login-err.visible{display:block}
 .login-note{font-size:12px;color:rgba(255,255,255,.3);margin-top:20px;text-align:center}
 
 /* APP */
-.hero{background:radial-gradient(circle at 80% 0%, #3A2C1B 0%, #1F1810 55%, #0E0A05 100%);padding:48px 22px 0;position:relative;overflow:hidden;border-radius:0 0 36px 36px}
+.hero{background:radial-gradient(ellipse at 70% -20%, #1A1408 0%, #0A0806 50%, #050404 100%);padding:48px 22px 0;position:relative;overflow:hidden;border-radius:0 0 36px 36px}
 .hero-orb1{position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(201,163,90,.28) 0%,transparent 70%)}
 .hero-orb2{position:absolute;bottom:-40px;left:-30px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(201,163,90,.14) 0%,transparent 70%)}
 .hero-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1;gap:12px}
@@ -77,7 +92,7 @@ body{font-family:var(--font-body);-webkit-font-smoothing:antialiased;background:
 .nav-tabs{display:none !important}
 .nav-tab{flex:1;text-align:center;padding:12px 0;font-family:var(--font-display);font-size:10px;font-weight:500;color:rgba(255,255,255,.45);letter-spacing:.24em;text-transform:uppercase;cursor:pointer;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;-webkit-tap-highlight-color:transparent}
 .nav-tab.active{color:var(--gold-light);border-bottom-color:var(--gold)}
-.container{max-width:680px;margin:0 auto;padding:20px 18px 60px}
+.container{max-width:480px;margin:0 auto;padding:20px 18px 60px}
 .sync-bar{text-align:center;font-size:11px;padding:7px 12px;border-radius:10px;margin-bottom:16px;letter-spacing:.04em;transition:all .3s}
 .sync-bar.ok{color:var(--gold-dark);background:#F5EFE4}
 .sync-bar.error{color:#A03020;background:#FDF0EE}
@@ -90,7 +105,7 @@ body{font-family:var(--font-body);-webkit-font-smoothing:antialiased;background:
 .btn-primary.active{background:rgba(184,154,106,.15);color:rgba(212,185,138,.8);border-color:rgba(184,154,106,.4)}
 
 /* FORMULARIO */
-.form-card{background:var(--white);border-radius:24px;padding:22px 18px;margin-bottom:20px;box-shadow:0 8px 32px rgba(61,43,31,.09);display:none;border:1px solid var(--border)}
+.form-card{background:var(--white);border-radius:24px;padding:22px 18px;margin-bottom:20px;box-shadow:0 4px 24px rgba(140,110,40,.08);display:none;border:1px solid rgba(200,184,144,.5)}
 .form-card.visible{display:block}
 .form-header{display:flex;align-items:center;gap:10px;margin-bottom:18px}
 .form-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--gold-light),var(--gold));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
@@ -98,7 +113,7 @@ body{font-family:var(--font-body);-webkit-font-smoothing:antialiased;background:
 .form-sub{font-size:12px;color:var(--brown-soft);margin-top:1px}
 .field{margin-bottom:13px}
 .field label{font-size:10px;font-weight:700;color:var(--gold-dark);display:block;margin-bottom:5px;letter-spacing:.1em;text-transform:uppercase}
-.field input,.field textarea,.field select{width:100%;padding:13px 15px;font-size:16px;border:1px solid var(--border);border-radius:12px;background:var(--ivory);color:var(--brown);font-family:inherit;outline:none;-webkit-appearance:none;appearance:none;transition:border-color .2s,background .2s}
+.field input,.field textarea,.field select{width:100%;padding:13px 15px;font-size:16px;border:1px solid rgba(200,184,144,.5);border-radius:12px;background:var(--cream);color:var(--brown);font-family:inherit;outline:none;-webkit-appearance:none;appearance:none;transition:border-color .2s,background .2s}
 .field input:focus,.field textarea:focus{border-color:var(--gold);background:var(--white);box-shadow:0 0 0 3px rgba(184,154,106,.12)}
 .field textarea{resize:none;min-height:72px}
 input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-height:50px;padding:0 15px}
@@ -108,7 +123,7 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
 .toggle-btn.sel{border-color:var(--gold);background:#F5EFE4;color:var(--gold-dark)}
 .err{font-size:12px;color:#A0392B;margin-bottom:10px;display:none;background:#FDF0EE;padding:8px 12px;border-radius:8px;border-left:3px solid #C0392B}
 .err.visible{display:block}
-.btn-save{width:100%;background:linear-gradient(135deg,var(--brown) 0%,var(--gold-dark) 100%);color:var(--white);border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;min-height:50px;-webkit-tap-highlight-color:transparent;font-family:inherit;letter-spacing:.06em;text-transform:uppercase;box-shadow:0 6px 20px rgba(61,43,31,.25);transition:opacity .15s}
+.btn-save{width:100%;background:linear-gradient(135deg,#9A7B1E 0%,#C9A35A 50%,#DDB96A 100%);color:#08070A;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;min-height:50px;-webkit-tap-highlight-color:transparent;font-family:inherit;letter-spacing:.06em;text-transform:uppercase;box-shadow:0 6px 24px rgba(180,140,50,.3);transition:opacity .15s}
 .btn-save:active{opacity:.85}
 .btn-save:disabled{opacity:.5;cursor:not-allowed}
 
@@ -131,11 +146,11 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
 .ficha-cargada-hist{font-size:12px;color:var(--gold-dark);margin-top:5px;font-weight:600}
 
 /* CARDS */
-.card{background:var(--white);border-radius:20px;padding:16px;margin-bottom:12px;box-shadow:0 2px 16px rgba(61,43,31,.06);display:flex;gap:14px;align-items:flex-start;border:1px solid var(--border);transition:opacity .25s,border-color .25s}
+.card{background:var(--cream);border-radius:20px;padding:16px;margin-bottom:12px;box-shadow:0 2px 20px rgba(140,110,40,.07);display:flex;gap:14px;align-items:flex-start;border:1px solid rgba(200,184,144,.55);transition:opacity .25s,border-color .25s}
 .card.completado,.card.cancelado{opacity:.5}
 .card.in_progress{border-color:#2855B0;border-width:2px;box-shadow:0 2px 16px rgba(40,85,176,.12)}
-.date-block{min-width:52px;text-align:center;background:linear-gradient(160deg,var(--ivory),#E8DDD0);border-radius:14px;padding:10px 6px;flex-shrink:0;border:1px solid var(--border)}
-.date-day{font-size:24px;font-weight:800;line-height:1;color:var(--brown)}
+.date-block{min-width:52px;text-align:center;background:linear-gradient(160deg,#0D0B08,#08070A);border-radius:14px;padding:10px 6px;flex-shrink:0;border:1px solid rgba(201,163,90,.25)}
+.date-day{font-size:24px;font-weight:800;line-height:1;background:linear-gradient(180deg,#F2D58F 0%,#C9A35A 60%,#9A7B1E 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .date-mon{font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;margin-top:4px;font-weight:700}
 .card-body{flex:1;min-width:0}
 .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
@@ -149,10 +164,10 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
 .card-meta{font-size:15px;color:var(--brown-soft);margin-top:7px;font-weight:600}
 .card-notas{font-size:12px;color:#B8A898;margin-top:5px;font-style:italic;line-height:1.4}
 .card-actions{display:flex;gap:8px;margin-top:12px;padding-top:11px;border-top:1px solid var(--ivory);flex-wrap:wrap}
-.act-btn{font-size:12px;font-weight:600;border:1px solid var(--border);border-radius:10px;padding:7px 13px;min-height:34px;cursor:pointer;-webkit-tap-highlight-color:transparent;font-family:inherit;background:var(--white);color:var(--brown-mid);transition:opacity .15s}
+.act-btn{font-size:12px;font-weight:600;border:1px solid rgba(200,184,144,.5);border-radius:10px;padding:7px 13px;min-height:34px;cursor:pointer;-webkit-tap-highlight-color:transparent;font-family:inherit;background:var(--white);color:var(--brown-mid);transition:opacity .15s}
 .act-btn:active{opacity:.7}
-.btn-ok{background:#F0F7EA;color:#4A7A20;border-color:#C8E0B0}
-.btn-iniciar{background:#E8F0FB;color:#2855B0;border-color:#9BB5E8}
+.btn-ok{background:linear-gradient(135deg,#9A7B1E,#C9A35A);color:#FFFFFF;border-color:transparent}
+.btn-iniciar{background:linear-gradient(135deg,#0D0B08,#1A1408);color:var(--gold-light);border-color:rgba(201,163,90,.4)}
 .btn-cancel{background:#FDF0EE;color:#A03020;border-color:#F0C0B8}
 .btn-del{background:var(--ivory);color:var(--brown-soft)}
 .btn-ficha{background:#F5EFE4;color:var(--gold-dark);border-color:rgba(184,154,106,.4)}
@@ -230,7 +245,7 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
 .metodo-tabs{display:flex;gap:8px;margin-bottom:8px}
 .metodo-tab{flex:1;padding:10px;font-size:13px;font-weight:600;border-radius:12px;border:1px solid var(--border);background:var(--ivory);color:var(--brown-soft);cursor:pointer;font-family:inherit;text-align:center;-webkit-tap-highlight-color:transparent}
 .metodo-tab.sel{border-color:var(--gold);background:#FFF8E6;color:var(--gold-dark)}
-.btn-cobrar{width:100%;background:linear-gradient(135deg,var(--brown) 0%,var(--gold-dark) 100%);color:var(--white);border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;min-height:50px;-webkit-tap-highlight-color:transparent;font-family:inherit;letter-spacing:.06em;text-transform:uppercase;box-shadow:0 6px 20px rgba(59,51,43,.25);margin-top:12px}
+.btn-cobrar{width:100%;background:linear-gradient(135deg,#9A7B1E 0%,#C9A35A 50%,#DDB96A 100%);color:#08070A;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;min-height:50px;-webkit-tap-highlight-color:transparent;font-family:inherit;letter-spacing:.06em;text-transform:uppercase;box-shadow:0 6px 24px rgba(180,140,50,.3);margin-top:12px}
 .btn-sin-cobro{width:100%;background:transparent;color:var(--brown-soft);border:1px solid var(--border);border-radius:14px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;-webkit-tap-highlight-color:transparent}
 
 /* CAJA */
@@ -453,22 +468,22 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
 .pld-card { background: var(--brown-soft); }
 
 .precios-columns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  columns: 2;
+  column-gap: 14px;
   margin-bottom: 16px;
-  align-items: start;
 }
 @media (max-width: 560px) {
-  .precios-columns { grid-template-columns: 1fr; }
+  .precios-columns { columns: 1; }
 }
-.precios-col { display: flex; flex-direction: column; gap: 14px; }
+.precios-col { display: contents; }
 
 .precio-section {
   background: var(--white);
   border-radius: 16px;
   padding: 18px 16px;
   border: 1px solid var(--border);
+  break-inside: avoid;
+  margin-bottom: 14px;
 }
 .precio-section-header {
   display: flex;
@@ -556,11 +571,6 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
   display: flex;
   gap: 4px;
   margin-top: 6px;
-  opacity: 0;
-  transition: opacity .18s ease;
-}
-.precio-item:hover .precio-item-actions {
-  opacity: 1;
 }
 .precio-footer-note {
   background: var(--brown);
@@ -833,9 +843,9 @@ body.menu-open{ overflow:hidden; }
   position:fixed;
   top:0;right:0;bottom:0;
   width:232px;
-  background:linear-gradient(180deg,#2E2419 0%,#1F1810 100%);
-  border-left:1px solid rgba(201,163,90,.15);
-  box-shadow:-2px 0 24px rgba(0,0,0,.18);
+  background:linear-gradient(180deg,#0D0B08 0%,#08070A 100%);
+  border-left:1px solid rgba(201,163,90,.18);
+  box-shadow:-4px 0 32px rgba(0,0,0,.35);
   z-index:90;
   flex-direction:column;
   font-family:var(--font-body);
@@ -873,7 +883,7 @@ body.menu-open{ overflow:hidden; }
   font-weight:600;
   font-size:20px;
   letter-spacing:.34em;
-  background:linear-gradient(180deg,#F2D58F 0%,#C9A35A 55%,#8C6F2F 100%);
+  background:linear-gradient(180deg,#F0D080 0%,#C9A35A 50%,#9A7B1E 100%);
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
   text-transform:uppercase;
   text-align:center;
@@ -956,8 +966,8 @@ body.menu-open{ overflow:hidden; }
 .aurea-sidebar-item.active .aurea-sidebar-item-icon{
   background:linear-gradient(135deg,var(--gold-light),var(--gold));
   border-color:var(--gold);
-  color:#1A130C;
-  box-shadow:0 4px 14px rgba(201,163,90,.32);
+  color:#08070A;
+  box-shadow:0 4px 14px rgba(201,163,90,.4);
 }
 .aurea-sidebar-item-label{flex:1;line-height:1.2}
 
@@ -1849,26 +1859,27 @@ body.menu-open{ overflow:hidden; }
 
 <!-- 1. Firebase SDK (SIN async para evitar condiciones de carrera) -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
 <!-- 2. App modules — orden de dependencias garantizado -->
-<script src="js/config.js"></script>      <!-- Firebase config + dbMock + initFirebase -->
-<script src="js/helpers.js"></script>     <!-- Soft delete, validaciones, error handling -->
-<script src="js/ui.js"></script>          <!-- showPanel, setSyncBar -->
-<script src="js/db.js"></script>          <!-- Firebase listeners + seed centralizado -->
-<script src="js/state.js"></script>       <!-- Variables globales (usa tratamientosSeed de db.js) -->
-<script src="js/auth.js"></script>        <!-- Login, sesión, auto-login -->
-<script src="js/caja.js"></script>        <!-- Cobros y caja diaria -->
-<script src="js/turnos.js"></script>      <!-- CRUD de turnos -->
-<script src="js/pacientes.js"></script>   <!-- Fichas y historial -->
-<script src="js/precios.js"></script>     <!-- Tratamientos y precios -->
-<script src="js/modales.js"></script>     <!-- Modales de edición -->
-<script src="js/menu.js"></script>        <!-- Navegación sidebar -->
-<script src="js/cal.js"></script>          <!-- Vista calendario día/semana/mes -->
-<script src="js/gcal.js"></script>        <!-- Google Calendar sync -->
-<script src="js/archivos.js"></script>    <!-- Módulo archivos clínicos (Firebase DB + Canvas) -->
-<script src="js/reportes.js"></script>   <!-- Panel de reportes mensuales (solo admins) -->
-<script src="js/chat.js"></script>       <!-- Chat interno entre usuarios -->
+<script src="js/config.js?v=2"></script>      <!-- Firebase config + dbMock + initFirebase -->
+<script src="js/helpers.js?v=2"></script>     <!-- Soft delete, validaciones, error handling -->
+<script src="js/ui.js?v=2"></script>          <!-- showPanel, setSyncBar -->
+<script src="js/db.js?v=2"></script>          <!-- Firebase listeners + seed centralizado -->
+<script src="js/state.js?v=2"></script>       <!-- Variables globales (usa tratamientosSeed de db.js) -->
+<script src="js/auth.js?v=2"></script>        <!-- Login, sesión, auto-login -->
+<script src="js/caja.js?v=2"></script>        <!-- Cobros y caja diaria -->
+<script src="js/turnos.js?v=2"></script>      <!-- CRUD de turnos -->
+<script src="js/pacientes.js?v=2"></script>   <!-- Fichas y historial -->
+<script src="js/precios.js?v=2"></script>     <!-- Tratamientos y precios -->
+<script src="js/modales.js?v=2"></script>     <!-- Modales de edición -->
+<script src="js/menu.js?v=2"></script>        <!-- Navegación sidebar -->
+<script src="js/cal.js?v=2"></script>          <!-- Vista calendario día/semana/mes -->
+<script src="js/gcal.js?v=2"></script>        <!-- Google Calendar sync -->
+<script src="js/archivos.js?v=2"></script>    <!-- Módulo archivos clínicos (Firebase DB + Canvas) -->
+<script src="js/reportes.js?v=2"></script>   <!-- Panel de reportes mensuales (solo admins) -->
+<script src="js/chat.js?v=2"></script>       <!-- Chat interno entre usuarios -->
 
 </body>
 </html>
