@@ -8,6 +8,7 @@
     "pagos":        { ".read": true, ".write": true, ".indexOn": ["fecha"] },
     "cierres":      { ".read": true, ".write": true, ".indexOn": ["timestamp"] },
     "tratamientos": { ".read": true, ".write": true },
-    "chat":         { ".read": true, ".write": true, ".indexOn": ["ts"] }
+    "chat":         { ".read": true, ".write": true, ".indexOn": ["ts"] },
+    "insumos":      { ".read": true, ".write": true }
   }
 }

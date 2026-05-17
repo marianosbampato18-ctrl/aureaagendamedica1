@@ -1663,6 +1663,36 @@ body.menu-open{ overflow:hidden; }
       <div id="rep-contenido"></div>
     </div>
 
+    <!-- PANEL STOCK (solo admins) -->
+    <div class="panel" id="panel-stock">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div class="section-label" style="margin:0">Insumos en stock</div>
+        <button id="btn-nuevo-insumo" class="btn-primary" onclick="toggleFormStock()">+ Insumo</button>
+      </div>
+
+      <!-- Formulario nuevo/editar insumo -->
+      <div class="form-card" id="form-stock">
+        <div class="form-header">
+          <div class="form-icon">📦</div>
+          <div><div class="form-title" id="form-stock-title">Nuevo insumo</div><div class="form-sub">Completá los datos del insumo</div></div>
+        </div>
+        <div class="err" id="stock-err"></div>
+        <div class="field"><label>Nombre *</label><input type="text" id="stock-nombre" placeholder="Ej: Ácido Hialurónico 1ml"/></div>
+        <div class="grid-2">
+          <div class="field"><label>Categoría</label><input type="text" id="stock-categoria" placeholder="Ej: Rellenos"/></div>
+          <div class="field"><label>Unidad</label><input type="text" id="stock-unidad" placeholder="Ej: jeringa"/></div>
+        </div>
+        <div class="grid-2">
+          <div class="field"><label>Stock actual</label><input type="number" id="stock-stock" min="0" placeholder="0"/></div>
+          <div class="field"><label>Stock mínimo</label><input type="number" id="stock-minimo" min="0" placeholder="0" title="Alerta cuando baje de este número"/></div>
+        </div>
+        <div class="field"><label>Descripción (opcional)</label><input type="text" id="stock-descripcion" placeholder="Notas adicionales"/></div>
+        <button class="btn-save" id="btn-save-insumo" onclick="guardarInsumo()">Guardar insumo</button>
+      </div>
+
+      <div id="stock-contenido"></div>
+    </div>
+
   <!-- CHAT FLOTANTE -->
   <button class="chat-fab" id="chat-fab" onclick="toggleChat()" title="Chat interno">
     💬
@@ -1824,6 +1854,17 @@ body.menu-open{ overflow:hidden; }
   </div>
 </div>
 
+<!-- MODAL INSUMOS DE TRATAMIENTO -->
+<div class="modal-overlay" id="modal-insumos" onclick="if(event.target===this)cerrarModalInsumos()">
+  <div class="modal-sheet" style="max-height:80vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 20px 0">
+      <div style="font-size:11px;font-weight:700;color:var(--gold-dark);letter-spacing:.1em;text-transform:uppercase">Insumos del tratamiento</div>
+      <button onclick="cerrarModalInsumos()" style="background:none;border:none;font-size:20px;color:var(--brown-soft);cursor:pointer;padding:4px">✕</button>
+    </div>
+    <div id="modal-insumos-body"></div>
+  </div>
+</div>
+
 <!-- ═══════════════════════════════════════════
      HAMBURGER MENU — Overlay + Drawer
      ═══════════════════════════════════════════ -->
@@ -1869,6 +1910,7 @@ body.menu-open{ overflow:hidden; }
 <script src="js/archivos.js"></script>    <!-- Módulo archivos clínicos (Firebase DB + Canvas) -->
 <script src="js/reportes.js"></script>   <!-- Panel de reportes mensuales (solo admins) -->
 <script src="js/chat.js"></script>       <!-- Chat interno entre usuarios -->
+<script src="js/stock.js"></script>      <!-- Stock de insumos (solo admins) -->
 
 </body>
 </html>

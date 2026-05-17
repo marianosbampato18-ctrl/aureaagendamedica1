@@ -108,6 +108,7 @@ function cerrarModalCobro() {
 
   // Pasa a completado sin importar si venía de proximo o in_progress
   db.ref('turnos/'+turnoCobroKey).update({ estado: 'completado' });
+  if (typeof descontarStockPorTurno === 'function') descontarStockPorTurno(t);
 
   // FIX #2: guard anti-duplicado de historial
   if (t && t.pacienteKey && !_historialYaRegistrado(t.pacienteKey, turnoCobroKey)) {
@@ -181,6 +182,7 @@ function confirmarCobro() {
     if (_pagadoChk >= _precioChk && _precioChk > 0) {
       // Turno ya saldado — marcar completado sin nuevo pago
       db.ref('turnos/'+turnoCobroKey).update({ estado: 'completado' });
+      if (typeof descontarStockPorTurno === 'function') descontarStockPorTurno(t);
       // FIX #2: guard anti-duplicado
       if (t && t.pacienteKey && !_historialYaRegistrado(t.pacienteKey, turnoCobroKey)) {
         db.ref('pacientes/'+t.pacienteKey+'/historial').push({
@@ -240,6 +242,7 @@ function confirmarCobro() {
 
     // FASE 3: turno pasa a completado desde proximo O desde in_progress
     db.ref('turnos/'+_turnoCobroKeyCopy).update({ estado: 'completado' });
+    if (typeof descontarStockPorTurno === 'function') descontarStockPorTurno(t);
 
     // FIX #2: guard anti-duplicado de historial
     if (t && t.pacienteKey && !_historialYaRegistrado(t.pacienteKey, _turnoCobroKeyCopy)) {

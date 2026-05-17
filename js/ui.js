@@ -17,7 +17,7 @@ function sanitize(str) {
 }
 
 function showPanel(panel) {
-  ['agenda','cal','fichas','caja','precios','reportes'].forEach(function(p) {
+  ['agenda','cal','fichas','caja','precios','reportes','stock'].forEach(function(p) {
     var panEl = document.getElementById('panel-'+p);
     var tabEl = document.getElementById('tab-'+p);
     if (panEl) panEl.className = 'panel' + (p === panel ? ' active' : '');
@@ -34,6 +34,7 @@ function showPanel(panel) {
   if (panel === 'caja')     renderCaja();
   if (panel === 'precios')  renderPrecios();
   if (panel === 'reportes') renderReportes();
+  if (panel === 'stock')    renderStock();
 }
 
 function setSyncBar(cls, txt) {

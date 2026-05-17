@@ -14,7 +14,7 @@ var USUARIOS = {
 
 // Paneles permitidos por rol
 var PERMISOS = {
-  'admin':     ['agenda', 'cal', 'fichas', 'caja', 'precios', 'reportes'],
+  'admin':     ['agenda', 'cal', 'fichas', 'caja', 'precios', 'reportes', 'stock'],
   'recepcion': ['agenda', 'cal']
 };
 
@@ -102,7 +102,9 @@ function _entrarApp(nombre) {
   renderTurnos();
   poblarSelectTratamientos();
   // Iniciar chat
-  if (typeof initChat === 'function') initChat();
+  if (typeof initChat  === 'function') initChat();
+  // Iniciar stock (solo si es admin)
+  if (typeof initStock === 'function' && usuarioPuede('stock')) initStock();
   // Fix #15: verificar cierres incompletos al iniciar
   setTimeout(verificarCierresIncompletos, 3000);
 }

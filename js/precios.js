@@ -148,6 +148,7 @@ function renderPrecios() {
           (item.t.duracion ? '<div style="font-size:10px;color:var(--brown-soft);margin-top:2px">⏱ '+item.t.duracion+' min</div>' : '') +
           '<div class="precio-item-actions">' +
             '<button class="act-btn btn-ficha" onclick="editarTratamiento(\''+item.key+'\')" style="font-size:11px;padding:4px 10px">Editar</button>' +
+            '<button class="act-btn" onclick="abrirModalInsumosTrat(\''+item.key+'\')" style="font-size:11px;padding:4px 10px;color:var(--gold-dark);border-color:rgba(140,111,47,.3)">📦 Insumos</button>' +
             '<button class="act-btn btn-del"   onclick="eliminarTratamiento(\''+item.key+'\')" style="font-size:11px;padding:4px 10px">Eliminar</button>' +
           '</div>' +
         '</div>' +

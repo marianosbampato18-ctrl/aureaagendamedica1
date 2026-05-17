@@ -9,7 +9,8 @@ var MENU_ITEMS = [
   { key: 'fichas',   label: 'Historias Clínicas', icon: '👤' },
   { key: 'caja',     label: 'Caja',               icon: '💰' },
   { key: 'precios',  label: 'Precios',            icon: '💎' },
-  { key: 'reportes', label: 'Reportes',           icon: '📊' }
+  { key: 'reportes', label: 'Reportes',           icon: '📊' },
+  { key: 'stock',    label: 'Stock',              icon: '📦' }
 ];
 
 var _menuInitialized = false;
