@@ -243,7 +243,7 @@ function abrirModalInsumosTrat(tratKey) {
   html += '<div style="margin-top:18px;font-size:11px;color:var(--brown-soft);text-align:center">Los cambios se guardan automáticamente</div></div>';
 
   document.getElementById('modal-insumos-body').innerHTML = html;
-  document.getElementById('modal-insumos').className = 'modal-overlay active';
+  document.getElementById('modal-insumos').className = 'modal-overlay visible';
 }
 
 function _actualizarVinculo(tratKey, insumoKey, valor) {
@@ -259,3 +259,4 @@ function cerrarModalInsumos() {
   var m = document.getElementById('modal-insumos');
   if (m) m.className = 'modal-overlay';
 }
+
