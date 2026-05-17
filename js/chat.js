@@ -6,6 +6,41 @@ var chatAbierto    = false;
 var chatData       = {};
 var chatUltimoVisto = parseInt(localStorage.getItem('chat_ultimo_visto') || '0');
 
+// ── Sonido de notificación (Web Audio API) ────────────────────
+// Campanita cálida de dos tonos — tipo notificación suave
+function _chatSonido() {
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function nota(freq, inicio, duracion, volumen) {
+      var osc   = ctx.createOscillator();
+      var gain  = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + inicio);
+
+      // Ataque suave + caída exponencial (tipo campana)
+      gain.gain.setValueAtTime(0, ctx.currentTime + inicio);
+      gain.gain.linearRampToValueAtTime(volumen, ctx.currentTime + inicio + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + inicio + duracion);
+
+      osc.start(ctx.currentTime + inicio);
+      osc.stop(ctx.currentTime + inicio + duracion);
+    }
+
+    // Dos notas: Mi5 → Sol#5 — intervalo de tercera mayor, cálido y positivo
+    nota(659, 0,    0.6, 0.18);   // Mi5  — primer toque
+    nota(830, 0.14, 0.7, 0.13);   // Sol#5 — segundo toque, más suave
+
+    // Cierra el contexto cuando termina para liberar recursos
+    setTimeout(function() { try { ctx.close(); } catch(e) {} }, 1200);
+  } catch(e) {
+    // Silencioso si el browser no soporta AudioContext
+  }
+}
+
 // ── Limpiar mensajes con más de 24h ──────────────────────────
 function _chatLimpiarViejos() {
   var corte = Date.now() - 24 * 60 * 60 * 1000;
@@ -18,14 +53,24 @@ function _chatLimpiarViejos() {
 }
 
 // ── Iniciar listener de Firebase ─────────────────────────────
+var _chatIniciado = false;  // evita sonido en la carga inicial
+
 function initChat() {
   _chatLimpiarViejos();
+
+  // Esperar un poco antes de activar sonidos para no sonar al cargar mensajes viejos
+  setTimeout(function() { _chatIniciado = true; }, 1500);
 
   var ref = db.ref('chat').orderByChild('ts').limitToLast(100);
   ref.on('child_added', function(snap) {
     chatData[snap.key] = snap.val();
     _chatActualizarBadge();
     if (chatAbierto) _chatRender();
+    // Sonido solo si: ya cargó, el chat está minimizado y el mensaje es de otro
+    var m = snap.val();
+    if (_chatIniciado && !chatAbierto && m.de !== (usuarioActual && usuarioActual.email)) {
+      _chatSonido();
+    }
   });
   ref.on('child_changed', function(snap) {
     chatData[snap.key] = snap.val();
