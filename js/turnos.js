@@ -411,15 +411,35 @@ function renderTurnos() {
   }
 
   if (completados.length) {
-    html += '<div class="section-label" style="margin-top:20px">Realizados</div>';
-    html += completados.map(function(t){ return cardTurnoHTML(t._key, t); }).join('');
+    html += '<div class="section-label seccion-toggle" style="margin-top:20px;cursor:pointer;user-select:none" onclick="toggleSeccion(\'realizados\')">' +
+      'Realizados <span style="margin-left:6px;font-size:11px;background:rgba(140,111,47,.15);color:var(--gold-dark);border-radius:20px;padding:2px 9px;font-weight:700">' + completados.length + '</span>' +
+      '<span id="ico-realizados" style="margin-left:auto;font-size:13px;color:var(--gold-dark);transition:transform .25s">▸</span>' +
+    '</div>' +
+    '<div id="sec-realizados" style="display:none">' +
+      completados.map(function(t){ return cardTurnoHTML(t._key, t); }).join('') +
+    '</div>';
   }
   if (cancelados.length) {
-    html += '<div class="section-label" style="margin-top:20px">Cancelados</div>';
-    html += cancelados.map(function(t){ return cardTurnoHTML(t._key, t); }).join('');
+    html += '<div class="section-label seccion-toggle" style="margin-top:20px;cursor:pointer;user-select:none" onclick="toggleSeccion(\'cancelados\')">' +
+      'Cancelados <span style="margin-left:6px;font-size:11px;background:rgba(160,57,43,.1);color:#A0392B;border-radius:20px;padding:2px 9px;font-weight:700">' + cancelados.length + '</span>' +
+      '<span id="ico-cancelados" style="margin-left:auto;font-size:13px;color:var(--brown-soft);transition:transform .25s">▸</span>' +
+    '</div>' +
+    '<div id="sec-cancelados" style="display:none">' +
+      cancelados.map(function(t){ return cardTurnoHTML(t._key, t); }).join('') +
+    '</div>';
   }
 
   document.getElementById('lista-turnos').innerHTML = html;
+}
+
+// ── Acordeón realizados / cancelados ──────────────────────────
+function toggleSeccion(id) {
+  var sec = document.getElementById('sec-' + id);
+  var ico = document.getElementById('ico-' + id);
+  if (!sec) return;
+  var abierto = sec.style.display !== 'none';
+  sec.style.display = abierto ? 'none' : 'block';
+  if (ico) ico.style.transform = abierto ? '' : 'rotate(90deg)';
 }
 
 // ── FICHAS ──
