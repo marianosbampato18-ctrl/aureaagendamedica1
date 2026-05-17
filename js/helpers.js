@@ -126,6 +126,27 @@ function limpiarError(elErr) {
   elErr.className   = 'err';
 }
 
+// ── AUDITORÍA DE ACCIONES ─────────────────────────────────────
+// Registra acciones del sistema en Firebase para trazabilidad.
+// Silencioso: nunca interrumpe el flujo si falla.
+function auditLog(accion, detalle) {
+  try {
+    var entry = {
+      accion:    accion || '',
+      detalle:   detalle || '',
+      usuario:   usuarioActual ? usuarioActual.nombre : 'desconocido',
+      email:     usuarioActual ? usuarioActual.email  : '',
+      ts:        Date.now(),
+      fecha:     new Date().toISOString()
+    };
+    if (typeof db !== 'undefined' && db && typeof db.ref === 'function') {
+      db.ref('auditoria').push(entry);
+    }
+  } catch(e) {
+    // Silencioso: nunca romper el flujo por un log
+  }
+}
+
 // ── EXPORTACIÓN DE DATOS (preparación para backup) ───────────
 // Genera un JSON descargable con todos los datos del sistema.
 // No requiere backend — usa el estado en memoria.
