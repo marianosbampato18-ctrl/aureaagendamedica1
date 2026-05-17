@@ -38,7 +38,9 @@ function guardarPaciente() {
     email: mail,
     notas: notas
   }).then(function(){
-    btn.disabled=false; btn.textContent='Guardar historia clínica'; toggleFormPac();
+    btn.disabled=false; btn.textContent='Guardar historia clínica';
+    auditLog('paciente_creado', nombre + (dni ? ' · DNI ' + dni : ''));
+    toggleFormPac();
   }).catch(function(e){
     btn.disabled=false; btn.textContent='Guardar historia clínica'; manejarErrorFirebase(e,'Guardar paciente',err);
   });
@@ -86,6 +88,7 @@ function abrirFichaKey(key) {
   if (!pacientesData[key]) return;
   fichaActualKey=key;
   var p=pacientesData[key];
+  auditLog('ficha_vista', p.nombre || key);
   document.getElementById('fd-nombre').textContent=p.nombre;
   var idEl = document.getElementById('fd-id');
   if (p.pacienteId) { idEl.textContent='#'+p.pacienteId; idEl.style.display='inline-block'; }
@@ -133,6 +136,8 @@ function guardarHistorial() {
     auto:false
   }).then(function(){
     btn.disabled=false;btn.textContent='Guardar entrada';
+    var p=pacientesData[fichaActualKey];
+    auditLog('historial_agregado', (p&&p.nombre||fichaActualKey) + ' · ' + trat + ' · ' + fecha);
     toggleFormHist();
     db.ref('pacientes/'+fichaActualKey).once('value',function(snap){pacientesData[fichaActualKey]=snap.val();renderHistorial();});
   }).catch(function(){btn.disabled=false;btn.textContent='Guardar entrada';err.textContent='Error.';err.className='err visible';});
@@ -140,6 +145,9 @@ function guardarHistorial() {
 
 function eliminarHistorial(hkey) {
   if (!confirmarAccionCritica('entrada del historial', 'Esta entrada quedará oculta pero no se perderá')) return;
+  var p=pacientesData[fichaActualKey];
+  var h=p&&p.historial&&p.historial[hkey];
+  auditLog('historial_eliminado', (p&&p.nombre||fichaActualKey) + (h?' · '+h.tratamiento:''));
   softDelete(db.ref('pacientes/'+fichaActualKey+'/historial/'+hkey), 'Eliminado por usuario')
     .then(function(){
       db.ref('pacientes/'+fichaActualKey).once('value',function(snap){

@@ -256,6 +256,8 @@ function confirmarCobro() {
       });
     }
 
+    var metodos = pagosValidos.map(function(f){ return f.metodo+' $'+parseFloat(f.monto).toLocaleString('es-AR'); }).join(' + ');
+    auditLog('cobro_confirmado', (t.paciente||'') + ' · ' + (t.tratamiento||'') + ' · ' + metodos);
     document.getElementById('modal-cobro').className = 'modal-overlay';
     turnoCobroKey = null;
   });
@@ -348,6 +350,7 @@ function guardarCobroManual() {
     manual:         true
   }).then(function() {
     if (_btnCM) { _btnCM.disabled=false; _btnCM.textContent='Guardar cobro'; }
+    auditLog('cobro_manual', desc + ' · ' + cmMetodo + ' · $' + monto.toLocaleString('es-AR'));
     ['cm-pac','cm-desc','cm-monto'].forEach(function(id){ document.getElementById(id).value=''; });
     cmPacienteKey = null;
     document.getElementById('cm-ficha-cargada').className = 'ficha-cargada';
@@ -434,6 +437,8 @@ function cerrarCaja() {
     pagosHoy.forEach(function(k) { updates['pagos/' + k + '/cierreId'] = cierreId; });
     return db.ref().update(updates).then(function() {
       return db.ref('cierres/' + cierreId + '/estado').set('completado');
+    }).then(function() {
+      auditLog('cierre_caja', 'Total $' + totales.total.toLocaleString('es-AR') + ' · ' + pagosHoy.length + ' movimientos');
     });
   }).catch(function(e) {
     alert('Error al cerrar la caja: ' + e.message +

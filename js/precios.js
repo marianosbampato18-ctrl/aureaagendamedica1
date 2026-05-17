@@ -45,6 +45,7 @@ function guardarTratamiento() {
     : db.ref('tratamientos').push(data);
   promesa.then(function(){
     btn.disabled=false; btn.textContent='Guardar tratamiento';
+    auditLog(tratEditKey ? 'tratamiento_editado' : 'tratamiento_creado', nombre + ' · $' + precio.toLocaleString('es-AR'));
     toggleFormTrat();
   }).catch(function(){
     btn.disabled=false; btn.textContent='Guardar tratamiento';
@@ -69,6 +70,7 @@ function eliminarTratamiento(key) {
   var t = tratamientosData[key];
   var nombre = t ? t.nombre : 'tratamiento';
   if (!confirmarAccionCritica('tratamiento del catálogo', nombre)) return;
+  auditLog('tratamiento_eliminado', nombre);
   softDelete(db.ref('tratamientos/'+key), 'Eliminado del catálogo')
     .catch(function(e){ manejarErrorFirebase(e, 'Eliminar tratamiento catálogo'); });
 }

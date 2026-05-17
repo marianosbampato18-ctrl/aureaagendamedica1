@@ -176,6 +176,7 @@ function guardarTurno() {
     }).then(function(){ return refs; });
   }).then(function(refs) {
     btn.disabled=false; btn.textContent='Guardar turno';
+    auditLog('turno_creado', nomPac + ' · ' + trat + ' · ' + fecha + ' ' + hora);
     toggleFormTurno();
     // Sincronizar con Google Calendar
     if (refs && refs.turnoKey) {
@@ -210,6 +211,7 @@ function cambiarEstado(key, estado) {
   var t = turnosData[key];
   if (!t) return;
   db.ref('turnos/'+key).update({ estado: estado });
+  auditLog('turno_estado', (t.paciente||'') + ' · ' + (t.fecha||'') + ' → ' + estado);
   // Eliminar de Google Calendar si se cancela
   if (estado === 'cancelado') {
     try { gcalEliminarEvento(key, t); } catch(e) {}
@@ -240,6 +242,7 @@ function iniciarAtencion(key) {
     estado:      'in_progress',
     iniciadoEn:  new Date().toISOString()  // timestamp de inicio de atención
   });
+  auditLog('turno_iniciado', (t.paciente||'') + ' · ' + (t.fecha||'') + ' ' + (t.hora||''));
 }
 
 function eliminarTurno(key) {
@@ -247,6 +250,7 @@ function eliminarTurno(key) {
   var t = turnosData[key];
   var detalle = t ? (t.paciente||'Turno') + ' · ' + (t.fecha||'') + ' ' + (t.hora||'') : 'Turno';
   if (!confirmarAccionCritica('turno', detalle)) return;
+  auditLog('turno_eliminado', detalle);
   try { gcalEliminarEvento(key, t); } catch(e) {}
   softDelete(db.ref('turnos/'+key), 'Eliminado por usuario')
     .catch(function(e){ manejarErrorFirebase(e, 'Eliminar turno'); });
