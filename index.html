@@ -86,8 +86,9 @@ body{font-family:var(--font-body);-webkit-font-smoothing:antialiased;background:
 .section-label::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
 .panel{display:none}
 .panel.active{display:block}
-.btn-primary{background:transparent;color:var(--gold-light);border:1px solid var(--gold);border-radius:24px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;min-height:38px;-webkit-tap-highlight-color:transparent;font-family:inherit;letter-spacing:.05em;transition:background .2s;white-space:nowrap}
-.btn-primary.active{background:rgba(184,154,106,.15);color:rgba(212,185,138,.8);border-color:rgba(184,154,106,.4)}
+.btn-primary{background:linear-gradient(135deg,#FDF8EE 0%,#F0E2C4 100%);color:var(--gold-dark);border:1px solid var(--gold);border-radius:24px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;min-height:38px;-webkit-tap-highlight-color:transparent;font-family:inherit;letter-spacing:.05em;transition:background .2s,box-shadow .2s;white-space:nowrap;box-shadow:0 2px 8px rgba(201,163,90,.15)}
+.btn-primary:hover{background:linear-gradient(135deg,#F5ECD8 0%,#E8D4A8 100%);box-shadow:0 4px 14px rgba(201,163,90,.28)}
+.btn-primary.active{background:rgba(184,154,106,.15);color:rgba(140,111,47,.8);border-color:rgba(184,154,106,.4);box-shadow:none}
 
 /* FORMULARIO */
 .form-card{background:var(--white);border-radius:24px;padding:22px 18px;margin-bottom:20px;box-shadow:0 8px 32px rgba(61,43,31,.09);display:none;border:1px solid var(--border)}
