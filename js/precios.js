@@ -130,9 +130,8 @@ function renderPrecios() {
     }
   });
 
-  var col0 = '', col1 = '';
-
-  catsPresentes.forEach(function(cfg) {
+  // Construir secciones con su HTML y cantidad de ítems
+  var secciones = catsPresentes.map(function(cfg) {
     var items = grupos[cfg.cat];
     var secHTML = '<div class="precio-section">' +
       '<div class="precio-section-header">' +
@@ -160,8 +159,14 @@ function renderPrecios() {
     });
 
     secHTML += '</div>';
-    if (cfg.col === 0) col0 += secHTML;
-    else               col1 += secHTML;
+    return { html: secHTML, count: items.length };
+  });
+
+  // Distribuir secciones en 2 columnas equilibradas (greedy por cantidad de ítems)
+  var col0 = '', col1 = '', count0 = 0, count1 = 0;
+  secciones.forEach(function(sec) {
+    if (count0 <= count1) { col0 += sec.html; count0 += sec.count; }
+    else                  { col1 += sec.html; count1 += sec.count; }
   });
 
   lista.innerHTML =
