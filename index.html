@@ -453,21 +453,22 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
 .pld-card { background: var(--brown-soft); }
 
 .precios-columns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  columns: 2;
+  column-gap: 14px;
   margin-bottom: 16px;
 }
 @media (max-width: 560px) {
-  .precios-columns { grid-template-columns: 1fr; }
+  .precios-columns { columns: 1; }
 }
-.precios-col { display: flex; flex-direction: column; gap: 12px; }
+.precios-col { display: contents; }
 
 .precio-section {
   background: var(--white);
   border-radius: 16px;
   padding: 18px 16px;
   border: 1px solid var(--border);
+  break-inside: avoid;
+  margin-bottom: 14px;
 }
 .precio-section-header {
   display: flex;
