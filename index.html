@@ -344,7 +344,6 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
   box-sizing:border-box;min-height:56px;
   touch-action:none;
   border-left-width:4px;border-left-style:solid;
-  display:flex;flex-direction:column;justify-content:space-between;
   box-shadow:0 1px 3px rgba(0,0,0,.06)
 }
 .cal-event:hover{box-shadow:0 4px 14px rgba(0,0,0,.12);transform:translateY(-1px)}
@@ -357,13 +356,13 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
 .cal-ev-completado {background:#F6F6F6;border-left-color:#AAAAAA;color:#555}
 .cal-ev-cancelado  {background:#FDF4F4;border-left-color:#CC4444;color:#7A2020;opacity:.7}
 /* Interior de la tarjeta */
-.cal-event-hora{font-size:11px;font-weight:700;line-height:1;margin-bottom:4px;opacity:.75}
-.cal-event-nombre{font-size:13px;font-weight:700;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cal-event-hora{font-size:11px;font-weight:700;line-height:1.2;opacity:.75;margin-bottom:3px}
+.cal-event-nombre{font-size:13px;font-weight:700;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px}
 .cal-event-nombre.tachado{text-decoration:line-through;opacity:.45}
-.cal-event-tratamiento{font-size:11px;opacity:.6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;line-height:1.3}
-.cal-event-footer{display:flex;align-items:center;justify-content:space-between;margin-top:7px;gap:4px}
+.cal-event-tratamiento{font-size:11px;opacity:.6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3;margin-bottom:6px}
+.cal-event-footer{display:flex;align-items:center;justify-content:space-between;gap:4px}
 .cal-event-duracion{font-size:10px;opacity:.5;line-height:1}
-/* Estado como TEXTO coloreado (no badge) */
+/* Estado como TEXTO coloreado */
 .cal-event-estado{font-size:10px;font-weight:700;line-height:1;flex-shrink:0}
 .ev-badge-pendiente  {color:#E09800}
 .ev-badge-confirmado {color:#2E9E5B}
