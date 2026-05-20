@@ -30,7 +30,7 @@ function showPanel(panel) {
     clearInterval(calNowTimer);
     calNowTimer = null;
   }
-  if (panel === 'cal')      renderCal();
+  if (panel === 'cal')      calSetView(calViewMode);
   if (panel === 'caja')     renderCaja();
   if (panel === 'precios')  renderPrecios();
   if (panel === 'reportes') renderReportes();
