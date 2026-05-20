@@ -73,7 +73,7 @@ function _calEventHTML(t, width, left) {
     '<div class="cal-event-tratamiento">'+sanitize(trat)+'</div>'+
     '<div class="cal-event-footer">'+
       '<span class="cal-event-duracion">⏱ '+durMin+' min</span>'+
-      '<span class="'+badge.cls+'">'+badge.txt+'</span>'+
+      '<span class="cal-event-estado '+badge.cls+'">'+badge.txt+'</span>'+
     '</div>'+
     '</div>';
 }

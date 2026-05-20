@@ -337,39 +337,39 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
 /* ── TARJETAS DE TURNO EN CALENDARIO ── */
 .cal-event{
   position:absolute;left:4px;right:4px;
-  border-radius:12px;padding:10px 12px;
+  border-radius:12px;padding:10px 14px;
   cursor:pointer;z-index:5;overflow:hidden;
   transition:box-shadow .15s,transform .15s;
   -webkit-tap-highlight-color:transparent;
-  box-sizing:border-box;min-height:54px;
+  box-sizing:border-box;min-height:56px;
   touch-action:none;
   border-left-width:4px;border-left-style:solid;
   display:flex;flex-direction:column;justify-content:space-between;
-  box-shadow:0 1px 4px rgba(0,0,0,.07)
+  box-shadow:0 1px 3px rgba(0,0,0,.06)
 }
-.cal-event:hover{box-shadow:0 4px 16px rgba(0,0,0,.13);transform:translateY(-1px)}
+.cal-event:hover{box-shadow:0 4px 14px rgba(0,0,0,.12);transform:translateY(-1px)}
 .cal-event:active{transform:scale(.98)}
 .cal-event.dragging{opacity:.6;box-shadow:0 8px 24px rgba(0,0,0,.2);transform:scale(1.02);z-index:50}
 /* Colores por ESTADO */
-.cal-ev-pendiente  {background:#FFFBEF;border-left-color:#D4900A;color:#6B4200}
-.cal-ev-confirmado {background:#EEF9F2;border-left-color:#27A35A;color:#145C30}
-.cal-ev-atencion   {background:#EDF4FF;border-left-color:#3A6FCC;color:#152E6E}
-.cal-ev-completado {background:#F5F5F5;border-left-color:#999;color:#444}
-.cal-ev-cancelado  {background:#FEF2F2;border-left-color:#D94040;color:#7A1A1A;opacity:.7}
+.cal-ev-pendiente  {background:#FFFCF0;border-left-color:#E09800;color:#5A3C00}
+.cal-ev-confirmado {background:#F0FAF4;border-left-color:#2E9E5B;color:#145C30}
+.cal-ev-atencion   {background:#F0F4FF;border-left-color:#4A72D4;color:#1A2E7A}
+.cal-ev-completado {background:#F6F6F6;border-left-color:#AAAAAA;color:#555}
+.cal-ev-cancelado  {background:#FDF4F4;border-left-color:#CC4444;color:#7A2020;opacity:.7}
 /* Interior de la tarjeta */
-.cal-event-hora{font-size:11px;font-weight:700;opacity:.7;line-height:1;margin-bottom:3px}
+.cal-event-hora{font-size:11px;font-weight:700;line-height:1;margin-bottom:4px;opacity:.75}
 .cal-event-nombre{font-size:13px;font-weight:700;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cal-event-nombre.tachado{text-decoration:line-through;opacity:.5}
-.cal-event-tratamiento{font-size:11px;opacity:.65;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;line-height:1.2}
-.cal-event-footer{display:flex;align-items:center;justify-content:space-between;margin-top:6px;gap:4px}
-.cal-event-duracion{font-size:10px;opacity:.55;line-height:1}
-/* Badges de estado */
-.ev-badge{font-size:9px;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:20px;text-transform:capitalize;flex-shrink:0;line-height:1.6}
-.ev-badge-pendiente  {background:#F5A623;color:#fff}
-.ev-badge-confirmado {background:#27A35A;color:#fff}
-.ev-badge-atencion   {background:#3A6FCC;color:#fff}
-.ev-badge-completado {background:#999;color:#fff}
-.ev-badge-cancelado  {background:#D94040;color:#fff}
+.cal-event-nombre.tachado{text-decoration:line-through;opacity:.45}
+.cal-event-tratamiento{font-size:11px;opacity:.6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;line-height:1.3}
+.cal-event-footer{display:flex;align-items:center;justify-content:space-between;margin-top:7px;gap:4px}
+.cal-event-duracion{font-size:10px;opacity:.5;line-height:1}
+/* Estado como TEXTO coloreado (no badge) */
+.cal-event-estado{font-size:10px;font-weight:700;line-height:1;flex-shrink:0}
+.ev-badge-pendiente  {color:#E09800}
+.ev-badge-confirmado {color:#2E9E5B}
+.ev-badge-atencion   {color:#4A72D4}
+.ev-badge-completado {color:#AAAAAA}
+.ev-badge-cancelado  {color:#CC4444}
 .cal-event-resize{position:absolute;bottom:0;left:0;right:0;height:10px;cursor:s-resize;display:flex;justify-content:center;align-items:center;touch-action:none}
 .cal-event-resize::after{content:'···';font-size:8px;opacity:.4;letter-spacing:2px}
 .cal-tooltip{position:fixed;background:rgba(30,24,18,.95);color:#fff;border-radius:12px;padding:10px 14px;font-size:12px;z-index:200;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:220px;display:none;line-height:1.4}
@@ -1341,8 +1341,8 @@ body.menu-open{ overflow:hidden; }
           </div>
           <button type="button" class="cal-today-btn" onclick="calGoToday()">Hoy</button>
           <div class="cal-view-toggle">
-            <button type="button" class="cal-view-btn" id="cal-btn-dia" onclick="calSetView('dia')">Día</button>
-            <button type="button" class="cal-view-btn active" id="cal-btn-sem" onclick="calSetView('semana')">Semana</button>
+            <button type="button" class="cal-view-btn active" id="cal-btn-dia" onclick="calSetView('dia')">Día</button>
+            <button type="button" class="cal-view-btn" id="cal-btn-sem" onclick="calSetView('semana')">Semana</button>
             <button type="button" class="cal-view-btn" id="cal-btn-mes" onclick="calSetView('mes')">Mes</button>
           </div>
         </div>
