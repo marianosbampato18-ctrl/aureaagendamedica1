@@ -2,16 +2,16 @@
 // CAL — Vista de calendario (día / semana / mes)
 // ═══════════════════════════════════════════
 
-var calViewMode   = 'semana';   // 'dia' | 'semana' | 'mes'
+var calViewMode   = 'dia';   // 'dia' | 'semana' | 'mes'
 var calCurrentDate = new Date();
 var calNowTimer    = null;
 
 var DIAS_CORTO  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 var MESES_LARGO = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-var CAL_HORA_INICIO = 7;   // primera hora visible
-var CAL_HORA_FIN    = 21;  // última hora visible
-var CAL_SLOT_H      = 60;  // altura en px de cada hora
+var CAL_HORA_INICIO = 8;   // primera hora visible
+var CAL_HORA_FIN    = 20;  // última hora visible
+var CAL_SLOT_H      = 80;  // altura en px de cada hora
 
 // ── Estado → clase CSS de color ──────────────────────────────
 function _calEventClass(t) {
@@ -58,7 +58,7 @@ function _calEventHTML(t, width, left) {
     ? t.tratamientos.map(function(x){ return x.nombre; }).join(', ')
     : (t.tratamiento || 'Consulta');
   var durMin = parseInt(t.duracion) || 45;
-  var altura = Math.max(36, (durMin / 60) * CAL_SLOT_H - 4);
+  var altura = Math.max(54, (durMin / 60) * CAL_SLOT_H - 6);
   var style  = 'top:'+top+'px;height:'+altura+'px;';
   if (width !== undefined) style += 'left:'+left+'%;width:'+width+'%;';
 
@@ -68,13 +68,13 @@ function _calEventHTML(t, width, left) {
     ' onclick="abrirModalEdit(\''+t._key+'\')"'+
     ' onmouseenter="calShowTip(event,\''+t._key+'\')"'+
     ' onmouseleave="calHideTip()">'+
-    '<div class="cal-event-top">'+
-      '<span class="cal-event-time">'+sanitize(t.hora||'')+'</span>'+
+    '<div class="cal-event-hora">'+sanitize(t.hora||'')+'</div>'+
+    '<div class="cal-event-nombre'+(cancelado?' tachado':'')+'">'+sanitize(t.paciente||'')+'</div>'+
+    '<div class="cal-event-tratamiento">'+sanitize(trat)+'</div>'+
+    '<div class="cal-event-footer">'+
+      '<span class="cal-event-duracion">⏱ '+durMin+' min</span>'+
       '<span class="'+badge.cls+'">'+badge.txt+'</span>'+
     '</div>'+
-    '<div class="cal-event-name'+(cancelado?' tachado':'')+'">'+sanitize(t.paciente||'')+'</div>'+
-    '<div class="cal-event-trat">'+sanitize(trat)+'</div>'+
-    (durMin ? '<div class="cal-event-dur">'+durMin+' min</div>' : '')+
     '</div>';
 }
 
