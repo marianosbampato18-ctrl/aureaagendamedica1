@@ -13,12 +13,24 @@ var CAL_HORA_INICIO = 7;   // primera hora visible
 var CAL_HORA_FIN    = 21;  // última hora visible
 var CAL_SLOT_H      = 60;  // altura en px de cada hora
 
-// ── Categoría → clase CSS de color ──────────────────────────
+// ── Estado → clase CSS de color ──────────────────────────────
 function _calEventClass(t) {
-  if (t.estado === 'cancelado') return 'cal-ev-otros cancelado';
-  var cat = (t.tratamientos && t.tratamientos[0] && tratamientosData[t.tratamientos[0].key] && tratamientosData[t.tratamientos[0].key].categoria) || '';
-  var map = { Rellenos:'cal-ev-rellenos', Hilos:'cal-ev-hilos', Toxina:'cal-ev-toxina', Enzimas:'cal-ev-enzimas', SkinQuality:'cal-ev-skin', Bioestimuladores:'cal-ev-bioest', Consulta:'cal-ev-consulta' };
-  return map[cat] || 'cal-ev-otros';
+  var estado = (t.estado || '').toLowerCase();
+  if (estado === 'cancelado')   return 'cal-ev-cancelado';
+  if (estado === 'completado')  return 'cal-ev-completado';
+  if (estado === 'en_atencion' || estado === 'en atención') return 'cal-ev-atencion';
+  if (estado === 'confirmado')  return 'cal-ev-confirmado';
+  return 'cal-ev-pendiente'; // pendiente o sin estado
+}
+
+// ── Estado → etiqueta visible ─────────────────────────────────
+function _calEstadoLabel(t) {
+  var estado = (t.estado || '').toLowerCase();
+  if (estado === 'cancelado')   return { txt: 'Cancelado',   cls: 'ev-badge ev-badge-cancelado' };
+  if (estado === 'completado')  return { txt: 'Completado',  cls: 'ev-badge ev-badge-completado' };
+  if (estado === 'en_atencion' || estado === 'en atención') return { txt: 'En atención', cls: 'ev-badge ev-badge-atencion' };
+  if (estado === 'confirmado')  return { txt: 'Confirmado',  cls: 'ev-badge ev-badge-confirmado' };
+  return { txt: 'Pendiente', cls: 'ev-badge ev-badge-pendiente' };
 }
 
 // ── Turnos del día (string YYYY-MM-DD) ──────────────────────
@@ -39,20 +51,30 @@ function _calHoraToPx(horaStr) {
 
 // ── HTML de un evento en grilla hora ────────────────────────
 function _calEventHTML(t, width, left) {
-  var top  = _calHoraToPx(t.hora);
-  var cls  = _calEventClass(t);
-  var trat = t.tratamientos && t.tratamientos.length
+  var top    = _calHoraToPx(t.hora);
+  var cls    = _calEventClass(t);
+  var badge  = _calEstadoLabel(t);
+  var trat   = t.tratamientos && t.tratamientos.length
     ? t.tratamientos.map(function(x){ return x.nombre; }).join(', ')
     : (t.tratamiento || 'Consulta');
-  var style = 'top:'+top+'px;height:'+CAL_SLOT_H+'px;';
+  var durMin = parseInt(t.duracion) || 45;
+  var altura = Math.max(36, (durMin / 60) * CAL_SLOT_H - 4);
+  var style  = 'top:'+top+'px;height:'+altura+'px;';
   if (width !== undefined) style += 'left:'+left+'%;width:'+width+'%;';
+
+  var cancelado = (t.estado||'').toLowerCase() === 'cancelado';
+
   return '<div class="cal-event '+cls+'" style="'+style+'"'+
     ' onclick="abrirModalEdit(\''+t._key+'\')"'+
     ' onmouseenter="calShowTip(event,\''+t._key+'\')"'+
     ' onmouseleave="calHideTip()">'+
-    '<div class="cal-event-time">'+sanitize(t.hora||'')+'</div>'+
-    '<div class="cal-event-name">'+sanitize(t.paciente||'')+'</div>'+
+    '<div class="cal-event-top">'+
+      '<span class="cal-event-time">'+sanitize(t.hora||'')+'</span>'+
+      '<span class="'+badge.cls+'">'+badge.txt+'</span>'+
+    '</div>'+
+    '<div class="cal-event-name'+(cancelado?' tachado':'')+'">'+sanitize(t.paciente||'')+'</div>'+
     '<div class="cal-event-trat">'+sanitize(trat)+'</div>'+
+    (durMin ? '<div class="cal-event-dur">'+durMin+' min</div>' : '')+
     '</div>';
 }
 
@@ -227,7 +249,8 @@ function _renderMes() {
       var max = 3;
       turnos.slice(0, max).forEach(function(t) {
         var trat = t.tratamientos && t.tratamientos.length ? t.tratamientos[0].nombre : (t.tratamiento || 'Consulta');
-        var cls = _calEventClass(t).replace('cal-ev-','cat-');
+        var estado = (t.estado||'pendiente').toLowerCase().replace(' ','_').replace('en_atención','atencion').replace('en_atencion','atencion');
+        var cls = 'cat-' + estado;
         gridHTML += '<div class="cal-mes-ev '+cls+'" onclick="abrirModalEdit(\''+t._key+'\')">';
         gridHTML += '<span class="cal-mes-ev-hora">'+sanitize(t.hora||'')+'</span>';
         gridHTML += '<span class="cal-mes-ev-txt">'+sanitize(t.paciente||trat)+'</span>';

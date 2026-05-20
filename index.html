@@ -334,15 +334,30 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
 .cal-now-line{position:absolute;left:0;right:0;z-index:10;pointer-events:none}
 .cal-now-dot{position:absolute;left:-4px;top:-4px;width:9px;height:9px;border-radius:50%;background:#E74C3C;box-shadow:0 0 0 2px rgba(231,76,60,.25)}
 .cal-now-bar{position:absolute;left:0;right:0;top:0;height:2px;background:#E74C3C}
-.cal-event{position:absolute;left:3px;right:3px;border-radius:10px;padding:5px 8px;cursor:pointer;z-index:5;overflow:hidden;transition:box-shadow .15s,transform .15s;-webkit-tap-highlight-color:transparent;box-sizing:border-box;min-height:24px;touch-action:none}
+.cal-event{position:absolute;left:3px;right:3px;border-radius:10px;padding:6px 8px;cursor:pointer;z-index:5;overflow:hidden;transition:box-shadow .15s,transform .15s;-webkit-tap-highlight-color:transparent;box-sizing:border-box;min-height:32px;touch-action:none;border-left-width:3px;border-left-style:solid}
+.cal-event:hover{box-shadow:0 3px 12px rgba(0,0,0,.15);transform:translateY(-1px)}
 .cal-event:active{transform:scale(.98)}
-.cal-event.proximo{background:#FFFBF0;border-left:3px solid var(--gold);color:var(--brown)}
-.cal-event.completado{background:#F2FBF2;border-left:3px solid #5CB85C;color:#2D6A2D}
-.cal-event.cancelado{background:#FFF4F4;border-left:3px solid #E07070;color:#8B3636;opacity:.7}
 .cal-event.dragging{opacity:.6;box-shadow:0 8px 24px rgba(0,0,0,.2);transform:scale(1.02);z-index:50}
-.cal-event-time{font-size:9px;font-weight:600;letter-spacing:.04em;opacity:.7;margin-bottom:1px;line-height:1}
-.cal-event-name{font-size:11px;font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cal-event-trat{font-size:9px;opacity:.65;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;line-height:1}
+/* Colores por ESTADO */
+.cal-ev-pendiente  {background:#FFFBF0;border-left-color:#E8A020;color:#7A4A00}
+.cal-ev-confirmado {background:#F0FBF2;border-left-color:#3DAA6B;color:#1A5C38}
+.cal-ev-atencion   {background:#EEF4FF;border-left-color:#4A7FD4;color:#1A3A7A}
+.cal-ev-completado {background:#F4F4F4;border-left-color:#888;color:#444}
+.cal-ev-cancelado  {background:#FFF4F4;border-left-color:#E05050;color:#8B2020;opacity:.65}
+/* Estructura interna de la tarjeta */
+.cal-event-top{display:flex;align-items:center;justify-content:space-between;gap:4px;margin-bottom:3px}
+.cal-event-time{font-size:10px;font-weight:700;letter-spacing:.03em;opacity:.8;line-height:1}
+.cal-event-name{font-size:12px;font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-event-name.tachado{text-decoration:line-through;opacity:.6}
+.cal-event-trat{font-size:10px;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;line-height:1.2}
+.cal-event-dur{font-size:9px;opacity:.5;margin-top:3px;line-height:1}
+/* Badges de estado dentro de la tarjeta */
+.ev-badge{font-size:8px;font-weight:700;letter-spacing:.05em;padding:2px 5px;border-radius:20px;text-transform:uppercase;flex-shrink:0;line-height:1.4}
+.ev-badge-pendiente  {background:#E8A020;color:#fff}
+.ev-badge-confirmado {background:#3DAA6B;color:#fff}
+.ev-badge-atencion   {background:#4A7FD4;color:#fff}
+.ev-badge-completado {background:#888;color:#fff}
+.ev-badge-cancelado  {background:#E05050;color:#fff}
 .cal-event-resize{position:absolute;bottom:0;left:0;right:0;height:10px;cursor:s-resize;display:flex;justify-content:center;align-items:center;touch-action:none}
 .cal-event-resize::after{content:'···';font-size:8px;opacity:.4;letter-spacing:2px}
 .cal-tooltip{position:fixed;background:rgba(30,24,18,.95);color:#fff;border-radius:12px;padding:10px 14px;font-size:12px;z-index:200;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:220px;display:none;line-height:1.4}
@@ -367,15 +382,11 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
 .cal-mes-ev-icon{font-size:10px;flex-shrink:0;line-height:1}
 .cal-mes-ev-txt{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;flex:1}
 .cal-mes-ev-hora{font-size:9px;opacity:.75;flex-shrink:0}
-.cal-mes-ev.cat-rellenos{background:#FFF3E6;color:#8B5E2A}
-.cal-mes-ev.cat-hilos{background:#FDE8F0;color:#8B2A54}
-.cal-mes-ev.cat-toxina{background:#E8F0FD;color:#2A4A8B}
-.cal-mes-ev.cat-enzimas{background:#E8FDE8;color:#2A7A2A}
-.cal-mes-ev.cat-skin{background:#E6F5FF;color:#1A5F8A}
-.cal-mes-ev.cat-bioest{background:#F3E8FD;color:#5A2A8B}
-.cal-mes-ev.cat-consulta{background:#F0FBF5;color:#2A6A4A}
-.cal-mes-ev.cat-otros{background:#F5F0E8;color:#6A5A3A}
-.cal-mes-ev.cat-cancelado{background:#FFF0F0;color:#8B2A2A;opacity:.6;text-decoration:line-through}
+.cal-mes-ev.cat-pendiente  {background:#FFFBF0;color:#7A4A00;border-left:2px solid #E8A020}
+.cal-mes-ev.cat-confirmado {background:#F0FBF2;color:#1A5C38;border-left:2px solid #3DAA6B}
+.cal-mes-ev.cat-atencion   {background:#EEF4FF;color:#1A3A7A;border-left:2px solid #4A7FD4}
+.cal-mes-ev.cat-completado {background:#F4F4F4;color:#444;border-left:2px solid #888}
+.cal-mes-ev.cat-cancelado  {background:#FFF4F4;color:#8B2020;border-left:2px solid #E05050;opacity:.6;text-decoration:line-through}
 .cal-mes-mas{font-size:9px;color:var(--brown-soft);padding:2px 5px;font-weight:600}
 .cal-mes-leyenda{display:flex;align-items:center;gap:12px;padding:10px 14px;border-top:1px solid #F0EBE4;flex-wrap:wrap;flex-shrink:0}
 .cal-ley-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
@@ -385,17 +396,7 @@ input[type="date"]{-webkit-appearance:none;appearance:none;height:50px;line-heig
 .cal-mes-titulo{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(22px,5vw,36px);font-weight:300;color:var(--brown);padding:14px 16px 4px;flex-shrink:0}
 .cal-mes-titulo em{font-style:italic;color:var(--gold-dark)}
 
-.cal-ev-rellenos{background:#FFF3E6;border-left:3px solid #C9813A;color:#7A4A1A}
-.cal-ev-hilos{background:#FDE8F0;border-left:3px solid #C95A8A;color:#7A2A50}
-.cal-ev-toxina{background:#E8F0FD;border-left:3px solid #5A7AC9;color:#2A3A8A}
-.cal-ev-enzimas{background:#E8FDE8;border-left:3px solid #5AC95A;color:#2A6A2A}
-.cal-ev-skin{background:#E6F5FF;border-left:3px solid #3A9AC9;color:#1A4A7A}
-.cal-ev-bioest{background:#F3E8FD;border-left:3px solid #8A5AC9;color:#4A1A8A}
-.cal-ev-consulta{background:#F0FBF5;border-left:3px solid #5AB88A;color:#2A6A4A}
-.cal-ev-otros{background:#F5F0E8;border-left:3px solid #C9A35A;color:#6A4A1A}
-.cal-ev-rellenos.cancelado,.cal-ev-hilos.cancelado,.cal-ev-toxina.cancelado,
-.cal-ev-enzimas.cancelado,.cal-ev-skin.cancelado,.cal-ev-bioest.cancelado,
-.cal-ev-consulta.cancelado,.cal-ev-otros.cancelado{opacity:.55;text-decoration:line-through}
+/* clases por categoría reemplazadas por clases por estado (cal-ev-pendiente, etc.) */
 
 /* ── LISTA DE PRECIOS PREMIUM ── */
 .precios-header {
