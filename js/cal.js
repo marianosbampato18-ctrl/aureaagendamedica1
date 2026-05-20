@@ -18,9 +18,9 @@ function _calEventClass(t) {
   var estado = (t.estado || '').toLowerCase();
   if (estado === 'cancelado')   return 'cal-ev-cancelado';
   if (estado === 'completado')  return 'cal-ev-completado';
-  if (estado === 'en_atencion' || estado === 'en atención') return 'cal-ev-atencion';
+  if (estado === 'in_progress' || estado === 'en_atencion' || estado === 'en atención') return 'cal-ev-atencion';
   if (estado === 'confirmado')  return 'cal-ev-confirmado';
-  return 'cal-ev-pendiente'; // pendiente o sin estado
+  return 'cal-ev-pendiente'; // proximo, pendiente o sin estado
 }
 
 // ── Estado → etiqueta visible ─────────────────────────────────
@@ -28,7 +28,7 @@ function _calEstadoLabel(t) {
   var estado = (t.estado || '').toLowerCase();
   if (estado === 'cancelado')   return { txt: 'Cancelado',   cls: 'ev-badge ev-badge-cancelado' };
   if (estado === 'completado')  return { txt: 'Completado',  cls: 'ev-badge ev-badge-completado' };
-  if (estado === 'en_atencion' || estado === 'en atención') return { txt: 'En atención', cls: 'ev-badge ev-badge-atencion' };
+  if (estado === 'in_progress' || estado === 'en_atencion' || estado === 'en atención') return { txt: 'En atención', cls: 'ev-badge ev-badge-atencion' };
   if (estado === 'confirmado')  return { txt: 'Confirmado',  cls: 'ev-badge ev-badge-confirmado' };
   return { txt: 'Pendiente', cls: 'ev-badge ev-badge-pendiente' };
 }
@@ -65,7 +65,7 @@ function _calEventHTML(t, width, left) {
   var cancelado = (t.estado||'').toLowerCase() === 'cancelado';
 
   return '<div class="cal-event '+cls+'" style="'+style+'"'+
-    ' onclick="abrirModalEdit(\''+t._key+'\')"'+
+    ' onclick="calAbrirPanel(\''+t._key+'\')"'+
     ' onmouseenter="calShowTip(event,\''+t._key+'\')"'+
     ' onmouseleave="calHideTip()">'+
     '<div class="cal-event-hora">'+sanitize(t.hora||'')+'</div>'+
@@ -346,4 +346,97 @@ function calShowTip(evt, key) {
 function calHideTip() {
   var tip = document.getElementById('cal-tooltip');
   if (tip) tip.className = 'cal-tooltip';
+}
+
+// ── Panel lateral de detalle del turno ───────────────────────
+function calAbrirPanel(key) {
+  var t = turnosData[key];
+  if (!t) return;
+
+  // Fallback a modal si el panel no existe (móvil, etc.)
+  var panel = document.getElementById('cal-side-panel');
+  if (!panel) { abrirModalEdit(key); return; }
+
+  // Hora fin
+  var horaStr = t.hora || '09:00';
+  var pts = horaStr.split(':');
+  var h = parseInt(pts[0]) || 9, m = parseInt(pts[1]) || 0;
+  var durMin = parseInt(t.duracion) || 45;
+  var hFin = h + Math.floor((m + durMin) / 60);
+  var mFin  = (m + durMin) % 60;
+  var horaFin = String(hFin).padStart(2,'0') + ':' + String(mFin).padStart(2,'0');
+
+  // Tratamientos
+  var trat = t.tratamientos && t.tratamientos.length
+    ? t.tratamientos.map(function(x){ return x.nombre; }).join(', ')
+    : (t.tratamiento || 'Consulta');
+
+  // Llenar datos
+  var q = function(id){ return document.getElementById(id); };
+  if (q('csp-time'))      q('csp-time').textContent      = horaStr + ' – ' + horaFin;
+  if (q('csp-nombre'))    q('csp-nombre').textContent    = sanitize(t.paciente || '—');
+  if (q('csp-tel'))       q('csp-tel').textContent       = t.telefono || '—';
+  if (q('csp-trat'))      q('csp-trat').textContent      = trat;
+  if (q('csp-dur'))       q('csp-dur').textContent       = durMin + ' min';
+  if (q('csp-notas'))     q('csp-notas').textContent     = t.notas  || '—';
+
+  // Badge de estado
+  var badge = _calEstadoLabel(t);
+  var badgeEl = q('csp-badge');
+  if (badgeEl) {
+    badgeEl.textContent = badge.txt;
+    badgeEl.className = 'csp-badge csp-badge-' + (t.estado||'pendiente').toLowerCase().replace('_','-').replace(' ','-');
+  }
+  if (q('csp-estado-txt')) q('csp-estado-txt').textContent = badge.txt;
+
+  // Botones de acción
+  var acc = q('csp-actions');
+  if (acc) {
+    var estado = (t.estado || '').toLowerCase();
+    var k = key;
+    var btns = '';
+    if (estado === 'proximo' || estado === 'pendiente' || estado === 'confirmado') {
+      btns += '<button class="csp-btn csp-btn-primary" onclick="iniciarAtencion(\''+k+'\');calCerrarPanel()">▶ Iniciar atención</button>';
+      btns += '<button class="csp-btn" onclick="abrirModalCobro(\''+k+'\');calCerrarPanel()">💲 Finalizar y cobrar</button>';
+    } else if (estado === 'in_progress' || estado === 'en_atencion' || estado === 'en atención') {
+      btns += '<button class="csp-btn csp-btn-primary" onclick="abrirModalCobro(\''+k+'\');calCerrarPanel()">✓ Finalizar y cobrar</button>';
+    } else if (estado === 'completado') {
+      btns += '<button class="csp-btn" onclick="abrirModalCobro(\''+k+'\');calCerrarPanel()">💰 Cobrar saldo</button>';
+    }
+    btns += '<button class="csp-btn" onclick="abrirModalEdit(\''+k+'\')">✏ Editar turno</button>';
+    if (t.pacienteKey) {
+      if (t.telefono) {
+        var tel = (t.telefono+'').replace(/\D/g,'');
+        btns += '<button class="csp-btn" onclick="window.open(\'https://wa.me/54'+tel+'\',\'_blank\')">💬 WhatsApp</button>';
+      }
+      btns += '<button class="csp-btn" onclick="abrirFichaKey(\''+t.pacienteKey+'\');calCerrarPanel()">📋 Historia clínica</button>';
+    }
+    if (estado !== 'cancelado' && estado !== 'completado') {
+      btns += '<button class="csp-btn csp-btn-danger" onclick="if(confirm(\'¿Cancelar este turno?\'))cambiarEstado(\''+k+'\',\'cancelado\');calCerrarPanel()">✕ Cancelar turno</button>';
+    }
+    acc.innerHTML = btns;
+  }
+
+  // Meta
+  var meta = q('csp-meta');
+  if (meta) {
+    var creadoStr = '';
+    if (t.creadoEn) {
+      var d = new Date(t.creadoEn);
+      creadoStr = 'Creado: ' + d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR', {hour:'2-digit',minute:'2-digit'});
+    }
+    meta.textContent = creadoStr;
+  }
+
+  // Mostrar
+  panel.classList.add('visible');
+  var wrap = document.getElementById('cal-main-wrap');
+  if (wrap) wrap.classList.add('panel-open');
+}
+
+function calCerrarPanel() {
+  var panel = document.getElementById('cal-side-panel');
+  if (panel) panel.classList.remove('visible');
+  var wrap = document.getElementById('cal-main-wrap');
+  if (wrap) wrap.classList.remove('panel-open');
 }
